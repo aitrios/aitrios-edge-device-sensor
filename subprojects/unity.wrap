@@ -1,0 +1,8 @@
+[wrap-git]
+directory = unity
+url = https://github.com/ThrowTheSwitch/Unity
+revision = tags/v2.6.1
+clone-recursive = true
+
+[provide]
+dependency_names = unity

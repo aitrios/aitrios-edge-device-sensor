@@ -1,0 +1,5 @@
+[wrap-git]
+directory = senscord
+url = https://github.com/SonySemiconductorSolutions/senscord.git
+revision = release/edc/1.11.1
+patch_directory = senscord

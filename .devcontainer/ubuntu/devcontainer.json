@@ -1,0 +1,10 @@
+{
+    "name": "Builder for SensCord",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "remoteUser": "vscode",
+    "runArgs": [
+        "--network=host"
+    ]
+}

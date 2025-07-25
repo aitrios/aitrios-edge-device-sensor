@@ -1,0 +1,37 @@
+# ベースの設定
+BasedOnStyle: Google
+
+# 14.4. Function Declarations and Definitions（関数宣言と定義）
+# Ruleの内容は省略
+# true の場合、1行の最大文字数を基準に折り返しを行う
+BinPackParameters: true
+
+# 14.11. Boolean Expressions（ブーリアン）
+# ブーリアンの式が標準の行の長さを超えるような場合、行の区切り方に一貫性を持たせてください。
+BreakBeforeBinaryOperators: None
+
+# 14.1. Line Length（行長）
+# コードの各行の長さは、長くとも80文字までにしてください。
+ColumnLimit: 80
+
+# 14.14. Preprocessor Directives（プリプロセッサディレクティブ）
+# プリプロセッサディレクティブに使われる#は、常に行の先頭になくてはなりません。
+IndentPPDirectives: None
+
+# 14.7. Function Calls（関数呼び出し）
+# Ruleの内容は省略
+# メモ：値は関数呼び出しの開始括弧の後に改行した場合のペナルティ、数値は暫定
+PenaltyBreakBeforeFirstCallParameter: 19
+
+# 14.10. Pointer and Reference Expressions（ポインタと参照）
+# ピリオドやアロー演算子の周りにスペースは使いません。ポインタ演算子の後にはスペースを使いません。
+# メモ：変数定義時のみ適用の可能性あり、要調査
+PointerAlignment: Right
+
+# 14.3. Spaces vs. Tabs（スペースとタブ）
+# スペースのみを使用してください。インデント1つにつき、スペースは2つです。
+TabWidth: 2
+UseTab: Never
+#
+AlignConsecutiveAssignments: true
+AlignConsecutiveMacros: true

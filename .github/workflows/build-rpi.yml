@@ -1,0 +1,56 @@
+name: Build RaspberryPi
+
+on:
+  workflow_call:
+    inputs:
+      namespace:
+        type: string
+        required: true
+      project_ref:
+        type: string
+        required: true
+      subproject_sha:
+        type: string
+        required: true
+      artifact_name:
+        type: string
+        default: senscord-rpi-deb
+        required: true
+jobs:
+  build:
+    runs-on: ubuntu-22.04-arm
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          repository: aitrios/aitrios-edge-device-sensor
+          ref: ${{ inputs.project_ref }}
+
+      - name: Build in the devcontainer
+        uses: devcontainers/ci@v0.3
+        with:
+          configFile: .devcontainer/raspi/devcontainer.json
+          push: never
+          runCmd: |
+            meson setup \
+              --prefix="$(pwd)/senscord_output" \
+              -Dsenscord_core_build=true \
+              builddir
+            ninja -v -C builddir
+            ninja -v -C builddir install_senscord
+            ninja -v -C builddir install_wamr
+            meson setup \
+              --prefix="$(pwd)/senscord_output" \
+              -Dsenscord_core_build=false \
+              -Dsenscord_component_build=true \
+              builddir --reconfigure
+            ninja -v -C builddir
+            ninja -v -C builddir install_senscord-rpicam-imx500
+            ninja -v -C builddir deb
+
+      - name: Upload senscord_output artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: senscord_output/*.deb

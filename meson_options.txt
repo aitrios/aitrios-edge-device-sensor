@@ -1,0 +1,4 @@
+option('target', type: 'string', value: 'raspi')
+option('test_build', type: 'boolean', value: false)
+option('senscord_core_build', type: 'boolean', value: false)
+option('senscord_component_build', type: 'boolean', value: false)
