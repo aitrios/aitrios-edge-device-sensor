@@ -1350,9 +1350,9 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibImplGetPstorageItemId(
   switch (target_component) {
     case kEdcSensorFwUpdateLibTargetAIModel:
       if (is_active) {
-        *item_id = kEsfParameterStorageManagerItemFwMgrBinaryInfo1;
+        *item_id = kEsfParameterStorageManagerItemFwMgrBinaryInfo13;
       } else {
-        *item_id = kEsfParameterStorageManagerItemFwMgrBinaryInfo2;
+        *item_id = kEsfParameterStorageManagerItemFwMgrBinaryInfo14;
       }
       break;
 

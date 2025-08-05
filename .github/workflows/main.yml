@@ -42,75 +42,10 @@ jobs:
           echo "namespace=${NAMESPACE_LC}" >> $GITHUB_OUTPUT
           echo namespace is ${NAMESPACE_LC}
 
-  filter:
-    runs-on: ubuntu-latest
-    needs:
-      - infos
-    outputs:
-      should_build_rpi: ${{ steps.platform_filter.outputs.should_build_rpi }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.project_ref }}
-          fetch-depth: 0
-
-      - uses: dorny/paths-filter@v2
-        id: filter
-        with:
-          filters: |
-            src_common:
-              - '.devcontainer/**'
-              - '.github/**'
-              - 'src/**'
-              - 'subprojects-custom/wasm_v1_3_1/**'
-              - 'test/**'
-              - 'meson.build'
-              - 'meson_options.txt'
-              - 'subprojects/packagefiles/**'
-              - 'subprojects/gtest.wrap'
-              - 'subprojects/senscord.wrap'
-              - 'subprojects/unity.wrap'
-              - 'subprojects/wasm-micro-runtime*.wrap'
-            docs:
-              - 'docs/**'
-              - '*.md'
-            rpi_only:
-              - 'subprojects/senscord-rpicam-imx500.wrap'
-              - 'subprojects-custom/senscord/**'
-              - 'subprojects-custom/senscord-rpicam-imx500/**'
-              - 'script/install-senscord-rpicam-imx500.sh'
-              - 'script/mk-deb.sh'
-
-      - name: Determine platform builds
-        id: platform_filter
-        run: |
-          SHOULD_BUILD_RPI="false"
-
-          # tag
-          if [[ "${{ startsWith(github.ref, 'refs/tags/') }}" == "true" ]]; then
-            SHOULD_BUILD_RPI="true"
-            echo "Tag pushed - building both platforms"
-          # src_common
-          elif [[ "${{ steps.filter.outputs.src_common }}" == "true" ]]; then
-            SHOULD_BUILD_RPI="true"
-            echo "Source code changes detected - building both platforms"
-          # rpi_only
-          elif [[ "${{ steps.filter.outputs.rpi_only }}" == "true" ]]; then
-            SHOULD_BUILD_RPI="true"
-            echo "Only RPi wrap file changed - building RPi only"
-          else
-            echo "No relevant changes detected - skipping builds"
-          fi
-
-          echo "should_build_rpi=${SHOULD_BUILD_RPI}" >> $GITHUB_OUTPUT
-
-          echo "Final decision: RPi build: ${SHOULD_BUILD_RPI}"
-
   build_rpi:
     name: Build Rpi
     needs:
-      - filter
-    if: ${{ needs.filter.outputs.should_build_rpi == 'true' }}
+      - infos
     uses: ./.github/workflows/build-rpi.yml
     secrets: inherit
     with:
@@ -129,15 +64,11 @@ jobs:
         run: |
           SUCCESS=true
 
-          if [[ "${{ needs.filter.outputs.should_build_rpi }}" == "true" ]]; then
-            if [[ "${{ needs.build_rpi.result }}" != "success" ]]; then
-              echo "RPi build failed"
-              SUCCESS=false
-            else
-              echo "RPi build succeeded"
-            fi
+          if [[ "${{ needs.build_rpi.result }}" != "success" ]]; then
+            echo "RPi build failed"
+            SUCCESS=false
           else
-            echo "RPi build not required"
+            echo "RPi build succeeded"
           fi
 
           if [[ "$SUCCESS" == "true" ]]; then
