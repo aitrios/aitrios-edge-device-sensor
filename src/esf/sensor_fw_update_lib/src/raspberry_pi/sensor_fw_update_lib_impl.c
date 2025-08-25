@@ -188,13 +188,10 @@ static void HashToHexString(size_t hash_size, const uint8_t *hash,
 }
 
 static EdcSensorFwUpdateLibResult RemoveTmpDirectory(void) {
-  if (access(TMP_DIR, F_OK) == 0) {
-    EdcSensorFwUpdateLibResult ret =
-        EdcSensorFwUpdateLibRemoveDirectory(TMP_DIR);
-    if (ret != kEdcSensorFwUpdateLibResultOk) {
-      DLOG_ERROR("Failed to remove temporary directory: %s.\n", TMP_DIR);
-      return ret;
-    }
+  EdcSensorFwUpdateLibResult ret = EdcSensorFwUpdateLibRemoveDirectory(TMP_DIR);
+  if (ret != kEdcSensorFwUpdateLibResultOk) {
+    DLOG_ERROR("Failed to remove temporary directory: %s.\n", TMP_DIR);
+    return ret;
   }
   return kEdcSensorFwUpdateLibResultOk;
 }
@@ -253,10 +250,11 @@ static void InitializeContext(EdcSensorFwUpdateLibImplContext *context) {
 /// @return true if newline codes are removed.
 static bool RemoveNewlineAndAtTheEnd(char *line, size_t line_size) {
   size_t line_length = strnlen(line, line_size);
+  if (line_length == 0) return false;
 
   if (line[line_length - 1] == '\n') {
     --line_length;
-    if (line[line_length - 1] == '\r') --line_length;
+    if ((line_length > 0) && (line[line_length - 1] == '\r')) --line_length;
     line[line_length] = '\0';
 
     return true;
@@ -942,30 +940,6 @@ static EdcSensorFwUpdateLibResult CompleteWriteAiModel(
     return ret;
   }
 
-// If this is defined, rpk and json files will be saved with the old file names
-// AND new file names. (i.e., there will be two copies of the same files.)
-// This is temporal implementation to keep backward compatibility.
-// TODO: Remove this after the old file names are no longer used.
-#define SAVE_WITH_OLD_NAME
-#ifdef SAVE_WITH_OLD_NAME
-#define OLD_RPK_PATH \
-  CONFIG_SENSOR_FW_UPDATE_LIB_AI_MODEL_DIRECTORY "/network.rpk"
-#define OLD_JSON_PATH \
-  CONFIG_SENSOR_FW_UPDATE_LIB_AI_MODEL_JSON_DIRECTORY "/custom.json"
-
-  ret = ConvertFpkToRpk(OLD_RPK_PATH);
-  if (ret != kEdcSensorFwUpdateLibResultOk) {
-    DLOG_ERROR("ConvertFpkToRpk failed for old name. (ret = %u)\n", ret);
-    return ret;
-  }
-  ret = CreateJsonFileForAiModel(network_name, OLD_RPK_PATH, OLD_JSON_PATH);
-  if (ret != kEdcSensorFwUpdateLibResultOk) {
-    DLOG_ERROR("CreateJsonFileForAiModel failed for old name. (ret = %u)\n",
-               ret);
-    return ret;
-  }
-#endif /* SAVE_WITH_OLD_NAME */
-
   EdcSensorFwUpdateLibResult tmp_ret = RemoveTmpDirectory();
   if (tmp_ret != kEdcSensorFwUpdateLibResultOk) {
     DLOG_WARNING("RemoveTmpDirectory failed. (ret = %u) Continue anyway.\n",
@@ -986,13 +960,14 @@ static EdcSensorFwUpdateLibResult CancelWriteAiModel(
     DLOG_ERROR("ComponentInfoToFilePath failed. (ret = %u)\n", ret);
     return ret;
   }
-  if (access(file_path, F_OK) == 0) {
-    if (remove(file_path) != 0) {
+
+  if (remove(file_path) != 0) {
+    if (errno == ENOENT) {
+      DLOG_INFO("File does not exist: %s\n", file_path);
+    } else {
       DLOG_WARNING("Failed to delete file: %s (errno = %d)\n", file_path,
                    errno);
     }
-  } else {
-    DLOG_INFO("File does not exist: %s\n", file_path);
   }
 
   ret = ComponentInfoToJsonFilePath(context->component_info, file_path,
@@ -1001,13 +976,14 @@ static EdcSensorFwUpdateLibResult CancelWriteAiModel(
     DLOG_ERROR("ComponentInfoToJsonFilePath failed. (ret = %u)\n", ret);
     return ret;
   }
-  if (access(file_path, F_OK) == 0) {
-    if (remove(file_path) != 0) {
+
+  if (remove(file_path) != 0) {
+    if (errno == ENOENT) {
+      DLOG_INFO("File does not exist: %s\n", file_path);
+    } else {
       DLOG_WARNING("Failed to delete file: %s (errno = %d)\n", file_path,
                    errno);
     }
-  } else {
-    DLOG_INFO("File does not exist: %s\n", file_path);
   }
 
   EdcSensorFwUpdateLibResult tmp_ret = RemoveTmpDirectory();
@@ -1037,13 +1013,13 @@ static EdcSensorFwUpdateLibResult EraseAiModel(
     DLOG_ERROR("ComponentInfoToFilePath failed. (ret = %u)\n", ret);
     error_occurred = true;
 
-  } else if (access(file_path, F_OK) == 0) {
-    if (remove(file_path) != 0) {
+  } else if (remove(file_path) != 0) {
+    if (errno == ENOENT) {
+      DLOG_INFO("File does not exist: %s\n", file_path);
+    } else {
       DLOG_ERROR("Failed to delete file: %s (errno = %d)\n", file_path, errno);
+      error_occurred = true;
     }
-
-  } else {
-    DLOG_INFO("File does not exist: %s\n", file_path);
   }
 
   // Remove the json file.
@@ -1052,14 +1028,13 @@ static EdcSensorFwUpdateLibResult EraseAiModel(
   if (ret != kEdcSensorFwUpdateLibResultOk) {
     DLOG_ERROR("ComponentInfoToFilePath failed. (ret = %u)\n", ret);
     error_occurred = true;
-  } else if (access(file_path, F_OK) == 0) {
-    if (remove(file_path) != 0) {
+  } else if (remove(file_path) != 0) {
+    if (errno == ENOENT) {
+      DLOG_INFO("File does not exist: %s\n", file_path);
+    } else {
       DLOG_ERROR("Failed to delete file: %s (errno = %d)\n", file_path, errno);
-      return kEdcSensorFwUpdateLibResultInternal;
+      error_occurred = true;
     }
-
-  } else {
-    DLOG_ERROR("ComponentInfoToJsonFilePath failed. (ret = %u)\n", ret);
   }
 
   if (error_occurred) {

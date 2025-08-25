@@ -70,8 +70,14 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibRemoveDirectory(
   struct dirent *entry;
   DIR *dir = opendir(dir_path);
   if (dir == NULL) {
-    DLOG_ERROR("Failed to open directory: %s. (errno = %d)\n", dir_path, errno);
-    return kEdcSensorFwUpdateLibResultInternal;
+    if (errno == ENOENT) {
+      DLOG_INFO("Directory does not exist: %s\n", dir_path);
+      return kEdcSensorFwUpdateLibResultOk;
+    } else {
+      DLOG_ERROR("Failed to open directory: %s. (errno = %d)\n", dir_path,
+                 errno);
+      return kEdcSensorFwUpdateLibResultInternal;
+    }
   }
 
   EdcSensorFwUpdateLibResult ret = kEdcSensorFwUpdateLibResultOk;
@@ -93,7 +99,7 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibRemoveDirectory(
 
     // Check if the entry is a directory using stat (more portable than d_type)
     struct stat entry_stat;
-    if (stat(file_path, &entry_stat) != 0) {
+    if (lstat(file_path, &entry_stat) != 0) {
       DLOG_ERROR("stat(%s) failed. errno = %d\n", file_path, errno);
       ret = kEdcSensorFwUpdateLibResultInternal;
       goto close_dir;
@@ -108,8 +114,8 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibRemoveDirectory(
       }
     } else {
       // The entry is a file
-      if (remove(file_path) != 0) {
-        DLOG_ERROR("remove(%s) failed. (errno = %d)\n", file_path, errno);
+      if (unlink(file_path) != 0) {
+        DLOG_ERROR("unlink(%s) failed. (errno = %d)\n", file_path, errno);
         ret = kEdcSensorFwUpdateLibResultInternal;
         goto close_dir;
       }

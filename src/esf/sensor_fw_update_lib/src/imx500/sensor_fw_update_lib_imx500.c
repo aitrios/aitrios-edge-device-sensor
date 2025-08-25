@@ -24,7 +24,7 @@
 #define DOWNLOAD_HEADER_IDENTIFIER "4649"
 
 typedef struct EdcSensorFwUpdateLibImx500DownloadHeader {
-  const char identifier[4];
+  char identifier[4];
   uint32_t data_size;
   uint16_t current_num;
   uint16_t total_num;
@@ -335,28 +335,21 @@ static EdcSensorFwUpdateLibResult ReadHeaders(
       // The below will be updated by ParseDownloadHeader.
       common.bytes_to_next_loop = common.data_end - common.data_current;
 
-      switch (header_type) {
-        case kHeaderTypeDownload: {
-          EdcSensorFwUpdateLibResult ret =
-              ParseDownloadHeader(&common, download_headers);
-          if (ret != kEdcSensorFwUpdateLibResultOk) {
-            DLOG_ERROR("ParseDownloadHeader failed: %u\n", ret);
-            return ret;
-          }
-        } break;
-        case kHeaderTypeImagePacket: {
-          EdcSensorFwUpdateLibResult ret =
-              ParseImagePacketHeader(&common, image_packet_header);
-          if (ret != kEdcSensorFwUpdateLibResultOk) {
-            DLOG_ERROR("ParseImagePacketHeader failed: %u\n", ret);
-            return ret;
-          }
+      if (header_type == kHeaderTypeDownload) {
+        EdcSensorFwUpdateLibResult ret =
+            ParseDownloadHeader(&common, download_headers);
+        if (ret != kEdcSensorFwUpdateLibResultOk) {
+          DLOG_ERROR("ParseDownloadHeader failed: %u\n", ret);
+          return ret;
+        }
 
-        } break;
-        default: {
-          DLOG_ERROR("Invalid header type: %u\n", header_type);
-          return kEdcSensorFwUpdateLibResultInvalidArgument;
-        } break;
+      } else if (header_type == kHeaderTypeImagePacket) {
+        EdcSensorFwUpdateLibResult ret =
+            ParseImagePacketHeader(&common, image_packet_header);
+        if (ret != kEdcSensorFwUpdateLibResultOk) {
+          DLOG_ERROR("ParseImagePacketHeader failed: %u\n", ret);
+          return ret;
+        }
       }
       common.data_current += common.bytes_to_next_loop;
 

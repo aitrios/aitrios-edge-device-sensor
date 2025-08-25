@@ -226,6 +226,15 @@ static EdcSensorFwUpdateLibResult LoadAllInfo(
   EsfParameterStorageManagerItemID id;
   EdcSensorFwUpdateLibResult ret = EdcSensorFwUpdateLibImplGetPstorageItemId(
       target_component, target_device, is_active, &id);
+  if (ret == kEdcSensorFwUpdateLibResultNotFound) {
+    // When factory loader or firmware is used, there is no active slot and
+    // EdcSensorFwUpdateLibImplGetPstorageItemId returns
+    // kEdcSensorFwUpdateLibResultNotFound, in which case we return an empty
+    // list.
+    *info_list_size = 0;
+    return kEdcSensorFwUpdateLibResultOk;
+  }
+
   if (ret != kEdcSensorFwUpdateLibResultOk) {
     DLOG_ERROR("EdcSensorFwUpdateLibImplGetPstorageItemId failed. (ret = %u)\n",
                ret);
@@ -312,7 +321,6 @@ static void ClearComponentInfo(EdcSensorFwUpdateLibComponentInfo *info) {
   info->valid = false;
 }
 
-// This code is not tested yet.
 /// @brief Set the component info container for components for which only one
 /// slot is used. The info container will always set to the same slot. If the
 /// same component info is found in that slot, it will return
@@ -392,10 +400,12 @@ static EdcSensorFwUpdateLibResult SetInfoContainerMultipleSlots(
   }
 
   context->component_info_slot_found = false;
-  int first_invalid_slot             = slot_count;
+  size_t first_invalid_slot          = slot_count;
   if (slot_count > 0) {
     for (size_t i = 0; i < slot_count; ++i) {
-      if (!data[i].valid) first_invalid_slot = i;
+      if (!data[i].valid && (first_invalid_slot == slot_count)) {
+        first_invalid_slot = i;
+      }
 
       if (data[i].valid &&
           CompareComponentInfo(&context->component_info, &data[i])) {
@@ -638,9 +648,8 @@ static EdcSensorFwUpdateLibResult UniquenessCheck(
     const EdcSensorFwUpdateLibComponentInfo *component_info) {
   EdcSensorFwUpdateLibComponentInfo *data = NULL;
   size_t slot_count                       = 0;
-  EsfParameterStorageManagerItemID id;
   EdcSensorFwUpdateLibResult ret = LoadAllInfo(target_component, target_device,
-                                               true, &data, &slot_count, &id);
+                                               true, &data, &slot_count, NULL);
   if (ret != kEdcSensorFwUpdateLibResultOk) {
     DLOG_ERROR("LoadAllInfo failed. (ret = %u)\n", ret);
     return ret;
@@ -1054,9 +1063,8 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibGetComponentInfoList(
   }
 
   size_t slot_count = *list_size;
-  EsfParameterStorageManagerItemID id;
   ret = LoadAllInfo(target_component, target_device, true, &list, &slot_count,
-                    &id);
+                    NULL);
   if (ret != kEdcSensorFwUpdateLibResultOk) {
     DLOG_ERROR("LoadAllInfo failed. (ret = %u)\n", ret);
     goto unlock_mutex_then_exit;

@@ -5,6 +5,15 @@ senscord_rpicam_imx500_build_dir = join_paths(meson.build_root(), 'senscord-rpic
 senscord_rpicam_imx500_install_dir = get_option('prefix')
 senscord_rpicam_imx500_package_name = 'senscord-edc-rpi'
 
+# Prepare CMake options for inference stream test build
+cmake_opts = ''
+if get_option('link_jpeg_lib')
+  cmake_opts += ' -DJPEG_ENABLED=true'
+endif
+if get_option('link_exif_lib')
+  cmake_opts += ' -DEXIF_ENABLED=true'
+endif
+
 build_senscord_rpicam_imx500 = custom_target(
   'build_senscord-rpicam-imx500',
   output: ['libcomponent_libcamera_image.so'],
@@ -16,6 +25,7 @@ build_senscord_rpicam_imx500 = custom_target(
     'cmake ' + senscord_rpicam_imx500_src +
       ' -DCMAKE_INSTALL_PREFIX=' + senscord_rpicam_imx500_install_dir +
       ' -DCMAKE_PREFIX_PATH=' + senscord_rpicam_imx500_install_dir +
+      cmake_opts +
       ' && ' +
     'cmake --build . --parallel $(nproc) --verbose'
   ],

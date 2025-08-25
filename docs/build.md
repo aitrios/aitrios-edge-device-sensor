@@ -11,7 +11,7 @@
 rm -rf builddir*
 rm -rf subprojects/senscord
 rm -rf subprojects/senscord-rpicam-imx500
-rm -rf subprojects/wasm-micro-runtime_v1_3_1
+rm -rf subprojects/wasm-micro-runtime
 ```
 
 ## Build and Install SensCord Core

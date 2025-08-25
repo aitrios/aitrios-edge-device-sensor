@@ -92,7 +92,18 @@ RUN echo "deb https://apt.llvm.org/bookworm/ llvm-toolchain-bookworm-${LLVM_VERS
 
 RUN apt-get install -y imx500-all libxml2 cmake meson ninja-build build-essential debhelper devscripts libcamera-dev \
     libjpeg-dev libdrm-dev libexif-dev libtiff5-dev libpng-dev libboost-all-dev python3-kconfiglib nlohmann-json3-dev \
-    python3-build python3-stdeb dh-python python3-msgpack
+    python3-build python3-stdeb dh-python python3-msgpack libopencv-dev python3-opencv python3-numpy
+
+RUN curl -fsSL https://github.com/prepkg/tensorflow-lite-raspberrypi/releases/download/2.12.0/tensorflow-lite_64.deb -o tensorflow-lite_64.deb && \
+    dpkg -i tensorflow-lite_64.deb || apt-get install -f -y && \
+    rm tensorflow-lite_64.deb
+
+RUN curl -fsSL https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnxruntime-linux-aarch64-1.22.0.tgz -o onnxruntime.tgz && \
+    tar -xzf onnxruntime.tgz -C /tmp && \
+    rm -rf /tmp/onnxruntime-linux-aarch64-1.22.0/lib/cmake && \
+    cp -rf /tmp/onnxruntime-linux-aarch64-1.22.0/include/* /usr/local/include/ && \
+    cp -rf /tmp/onnxruntime-linux-aarch64-1.22.0/lib/* /usr/local/lib && \
+    rm -rf /tmp/onnxruntime-linux-aarch64-1.22.0 onnxruntime.tgz
 
 ENV WASI_PREFIX=/usr/bin/
 ARG WASI_SDK_VERSION=24
