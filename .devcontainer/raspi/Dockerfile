@@ -100,6 +100,7 @@ RUN curl -fsSL https://github.com/prepkg/tensorflow-lite-raspberrypi/releases/do
 
 RUN curl -fsSL https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnxruntime-linux-aarch64-1.22.0.tgz -o onnxruntime.tgz && \
     tar -xzf onnxruntime.tgz -C /tmp && \
+    rm -rf /tmp/onnxruntime-linux-aarch64-1.22.0/lib/cmake && \
     cp -rf /tmp/onnxruntime-linux-aarch64-1.22.0/include/* /usr/local/include/ && \
     cp -rf /tmp/onnxruntime-linux-aarch64-1.22.0/lib/* /usr/local/lib && \
     rm -rf /tmp/onnxruntime-linux-aarch64-1.22.0 onnxruntime.tgz
