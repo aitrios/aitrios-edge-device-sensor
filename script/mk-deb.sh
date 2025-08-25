@@ -80,5 +80,7 @@ cp -a "${buildroot}/lib/."    "${buildroot}/dist/opt/senscord/lib/"
 cp -a "${buildroot}/python/." "${buildroot}/dist/opt/senscord/python/"
 cp -a "${buildroot}/share/."  "${buildroot}/dist/opt/senscord/share/"
 cp -a "${buildroot}/include/."  "${buildroot}/dist/opt/senscord/include/"
+cp -a "/usr/local/include/." "${buildroot}/dist/opt/senscord/include/"
+cp -a "/usr/local/lib/." "${buildroot}/dist/opt/senscord/lib/"
 
 dpkg-deb --build "${buildroot}/dist" "${buildroot}/${package_name}-${version}_$debarch.deb"

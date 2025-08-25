@@ -77,3 +77,33 @@ jobs:
             echo "Required checks failed. This PR cannot be merged"
             exit 1
           fi
+
+  release_on_tag:
+    if: >-
+      needs.checkpoint_success.result == 'success' &&
+      github.event_name == 'push' &&
+      startsWith(github.ref, 'refs/tags/')
+
+    needs:
+      - checkpoint_success
+
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Download Rpi build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: senscord-edc-rpi-deb-${{ github.run_id }}
+          path: artifacts
+
+      - name: List artifacts directory
+        run: ls -l artifacts
+
+      - name: Create draft GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          draft: true
+          files: artifacts/*
