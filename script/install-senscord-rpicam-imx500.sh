@@ -69,7 +69,6 @@ chmod -R 755 "$INSTALL_DIR"/share/*  || true
 # The permissions should be changed after the software is changed.
 chmod -R 777 "$INSTALL_DIR"/share/imx500-models || true
 chmod -R 777 "$INSTALL_DIR"/share/rpi-camera-assets || true
-chmod -R 755 "$INSTALL_DIR"/*.sh     || true
 
 echo "Install Done:"
 echo "  BUILD_DIR   = $BUILD_DIR"
