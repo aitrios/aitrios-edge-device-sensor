@@ -8,6 +8,7 @@
 #define EDC_SENSOR_FW_UPDATE_LIB_COMMON_H_
 
 #include <limits.h>
+#include <stdio.h>
 
 #include "sensor_fw_update_lib.h"
 
@@ -39,5 +40,7 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibRemoveDirectory(
     const char *dir_path);
 EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibCreateEmptyFile(
     const char *file_path);
+
+EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibFflushAndFsync(FILE *fp);
 
 #endif /* EDC_SENSOR_FW_UPDATE_LIB_COMMON_H_ */

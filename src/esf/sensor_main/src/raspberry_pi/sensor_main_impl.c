@@ -6,6 +6,10 @@
 
 #include "sensor_main_impl.h"
 
+EsfSensorErrCode EsfSensorUtilityVerifyFilesImpl(void) {
+  return kEsfSensorOk;
+}
+
 EsfSensorErrCode EsfSensorUtilityResetFilesImpl(void) {
   return kEsfSensorOk;
 }

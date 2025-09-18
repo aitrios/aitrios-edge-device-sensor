@@ -572,11 +572,19 @@ static EdcSensorFwUpdateLibResult SaveAiModelInfoAsJsonFile(
   fprintf(fp, INDENT "}\n");
   fprintf(fp, "}\n");
 
+  EdcSensorFwUpdateLibResult ret = EdcSensorFwUpdateLibFflushAndFsync(fp);
+  if (ret != kEdcSensorFwUpdateLibResultOk) {
+    DLOG_ERROR("EdcSensorFwUpdateLibFflushAndFsync failed: %u\n", ret);
+    goto close;
+  }
+
+close:
   if (fclose(fp) != 0) {
     DLOG_ERROR("Failed to close file: %s (errno = %d)\n", file_path, errno);
     return kEdcSensorFwUpdateLibResultInternal;
   }
-  return kEdcSensorFwUpdateLibResultOk;
+
+  return ret;
 }
 
 static EdcSensorFwUpdateLibResult CreateJsonFileForAiModel(

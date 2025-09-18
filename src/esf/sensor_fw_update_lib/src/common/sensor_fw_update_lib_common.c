@@ -151,10 +151,41 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibCreateEmptyFile(
     return kEdcSensorFwUpdateLibResultInternal;
   }
 
+  EdcSensorFwUpdateLibResult ret = EdcSensorFwUpdateLibFflushAndFsync(fp);
+  if (ret != kEdcSensorFwUpdateLibResultOk) {
+    DLOG_ERROR("EdcSensorFwUpdateLibFflushAndFsync failed: %u\n", ret);
+    goto close;
+  }
+
+close:
   if (fclose(fp) != 0) {
     DLOG_ERROR("Failed to close file: %s (errno = %d)\n", file_path, errno);
     return kEdcSensorFwUpdateLibResultInternal;
   }
 
-  return kEdcSensorFwUpdateLibResultOk;
+  return ret;
+}
+
+EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibFflushAndFsync(FILE *fp) {
+  if (fp == NULL) {
+    DLOG_ERROR("fp is NULL.\n");
+    return kEdcSensorFwUpdateLibResultInvalidArgument;
+  }
+
+  EdcSensorFwUpdateLibResult ret = kEdcSensorFwUpdateLibResultOk;
+
+  if (fflush(fp) != 0) {
+    DLOG_ERROR("fflush failed. (errno = %d)\n", errno);
+    ret = kEdcSensorFwUpdateLibResultInternal;
+    goto exit;
+  }
+
+  if (fsync(fileno(fp)) != 0) {
+    DLOG_ERROR("fsync failed. (errno = %d)\n", errno);
+    ret = kEdcSensorFwUpdateLibResultInternal;
+    goto exit;
+  }
+
+exit:
+  return ret;
 }

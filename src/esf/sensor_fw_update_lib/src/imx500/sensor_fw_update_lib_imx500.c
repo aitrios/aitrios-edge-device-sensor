@@ -498,6 +498,12 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibImx500AiModelWrite(
         size -= write_size;
       }
 
+      ret = EdcSensorFwUpdateLibFflushAndFsync(context->fp);
+      if (ret != kEdcSensorFwUpdateLibResultOk) {
+        DLOG_ERROR("EdcSensorFwUpdateLibFflushAndFsync failed: %u\n", ret);
+        return ret;
+      }
+
       if (fclose(context->fp) != 0) {
         DLOG_ERROR("Failed to close file: %s (errno = %d)\n",
                    context->fpk_file_path, errno);
@@ -537,6 +543,13 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibImx500AiModelClose(
   }
 
   if (context->fp != NULL) {
+    EdcSensorFwUpdateLibResult ret =
+        EdcSensorFwUpdateLibFflushAndFsync(context->fp);
+    if (ret != kEdcSensorFwUpdateLibResultOk) {
+      DLOG_ERROR("EdcSensorFwUpdateLibFflushAndFsync failed: %u\n", ret);
+      return ret;
+    }
+
     if (fclose(context->fp) != 0) {
       DLOG_ERROR("Failed to close file: %s (errno = %d)\n",
                  context->fpk_file_path, errno);
