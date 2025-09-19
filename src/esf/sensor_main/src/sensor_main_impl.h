@@ -8,5 +8,6 @@
 #define EDC_SENSOR_MAIN_IMPL_H_
 #include "sensor_main.h"
 
+EsfSensorErrCode EsfSensorUtilityVerifyFilesImpl(void);
 EsfSensorErrCode EsfSensorUtilityResetFilesImpl(void);
 #endif /* EDC_SENSOR_MAIN_IMPL_H_ */

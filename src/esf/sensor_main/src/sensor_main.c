@@ -108,6 +108,11 @@ EsfSensorErrCode EsfSensorUtilitySetupFiles(void) {
 }
 
 EsfSensorErrCode EsfSensorUtilityVerifyFiles(void) {
+  EsfSensorErrCode ret = EsfSensorUtilityVerifyFilesImpl();
+  if (ret != kEsfSensorOk) {
+    SENSCORD_PRINT_ERROR("EsfSensorUtilityVerifyFilesImpl failed");
+    return ret;
+  }
   return kEsfSensorOk;
 }
 
