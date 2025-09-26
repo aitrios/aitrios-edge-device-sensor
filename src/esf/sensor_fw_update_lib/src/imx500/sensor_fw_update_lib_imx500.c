@@ -80,7 +80,7 @@ static bool IsDigit(char c) { return ('0' <= c && c <= '9'); }
 /// no null terminator.
 static bool VerifyVersion(const char *version, size_t version_size) {
   if (version == NULL || version_size == 0) {
-    DLOG_ERROR("version or version_size is NULL or zero.\n");
+    SEND_DLOG_ERROR("version or version_size is NULL or zero.\n");
     return false;
   }
 
@@ -97,13 +97,13 @@ static bool VerifyVersion(const char *version, size_t version_size) {
 static bool VerifyDownloadHeader(
     const EdcSensorFwUpdateLibImx500DownloadHeader *header) {
   if (header == NULL) {
-    DLOG_ERROR("header is NULL.\n");
+    SEND_DLOG_ERROR("header is NULL.\n");
     return false;
   }
   if (strncmp(header->identifier, DOWNLOAD_HEADER_IDENTIFIER,
               sizeof(header->identifier)) != 0) {
-    DLOG_ERROR("Invalid identifier: %.*s.\n", (int)sizeof(header->identifier),
-               header->identifier);
+    SEND_DLOG_ERROR("Invalid identifier: %.*s.\n",
+                    (int)sizeof(header->identifier), header->identifier);
     return false;
   }
 
@@ -118,25 +118,25 @@ static EdcSensorFwUpdateLibResult ParseDownloadHeader(
     EdcSensorFwUpdateLibImx500ReadHeadersCommonInfo *common_info,
     EdcSensorFwUpdateLibImx500ReadDownloadHeadersInfo *info) {
   if (common_info == NULL || info == NULL) {
-    DLOG_ERROR("common_info or info is NULL.\n");
+    SEND_DLOG_ERROR("common_info or info is NULL.\n");
     return kEdcSensorFwUpdateLibResultInvalidArgument;
   }
 
   if (info->is_all_headers_read) {
-    DLOG_DEBUG("All download headers have been read. Do nothing\n");
+    SEND_DLOG_DEBUG("All download headers have been read. Do nothing\n");
     return kEdcSensorFwUpdateLibResultOk;
   }
 
   if (common_info->data_current >= common_info->data_end) {
-    DLOG_ERROR("data_current >= data_end\n");
+    SEND_DLOG_ERROR("data_current >= data_end\n");
     return kEdcSensorFwUpdateLibResultFailedPrecondition;
   }
 
-  DLOG_DEBUG("bytes_to_next_header: %zu\n", info->bytes_to_next_header);
-  DLOG_DEBUG("remaining_header_size: %zu\n", info->remaining_header_size);
-  DLOG_DEBUG("header_count: %zu\n", info->header_count);
-  DLOG_DEBUG("reaming_data_size: %td\n",
-             common_info->data_end - common_info->data_current);
+  SEND_DLOG_DEBUG("bytes_to_next_header: %zu\n", info->bytes_to_next_header);
+  SEND_DLOG_DEBUG("remaining_header_size: %zu\n", info->remaining_header_size);
+  SEND_DLOG_DEBUG("header_count: %zu\n", info->header_count);
+  SEND_DLOG_DEBUG("reaming_data_size: %td\n",
+                  common_info->data_end - common_info->data_current);
 
   if (info->bytes_to_next_header == 0) {
     if (info->remaining_header_size > 0) {
@@ -158,7 +158,7 @@ static EdcSensorFwUpdateLibResult ParseDownloadHeader(
       info->header_count++;
       if (!VerifyDownloadHeader(&info->header) ||
           (info->header_count != info->header.current_num)) {
-        DLOG_ERROR("Invalid download header.\n");
+        SEND_DLOG_ERROR("Invalid download header.\n");
         return kEdcSensorFwUpdateLibResultInvalidArgument;
       }
 
@@ -183,12 +183,12 @@ static EdcSensorFwUpdateLibResult ParseDownloadHeader(
   common_info->bytes_to_next_loop =
       MIN((size_t)(common_info->data_end - common_info->data_current),
           info->bytes_to_next_header);
-  DLOG_DEBUG("bytes_to_next_loop: %zu\n", common_info->bytes_to_next_loop);
-  DLOG_DEBUG("bytes_to_next_header: %zu\n", info->bytes_to_next_header);
-  DLOG_DEBUG("reaming_data_size: %td\n",
-             common_info->data_end - common_info->data_current);
-  DLOG_DEBUG("is_all_headers_read: %d\n", info->is_all_headers_read);
-  DLOG_DEBUG("---------------------------------\n");
+  SEND_DLOG_DEBUG("bytes_to_next_loop: %zu\n", common_info->bytes_to_next_loop);
+  SEND_DLOG_DEBUG("bytes_to_next_header: %zu\n", info->bytes_to_next_header);
+  SEND_DLOG_DEBUG("reaming_data_size: %td\n",
+                  common_info->data_end - common_info->data_current);
+  SEND_DLOG_DEBUG("is_all_headers_read: %d\n", info->is_all_headers_read);
+  SEND_DLOG_DEBUG("---------------------------------\n");
   info->bytes_to_next_header -= common_info->bytes_to_next_loop;
 
   return kEdcSensorFwUpdateLibResultOk;
@@ -198,21 +198,21 @@ static EdcSensorFwUpdateLibResult ParseImagePacketHeader(
     EdcSensorFwUpdateLibImx500ReadHeadersCommonInfo *common_info,
     EdcSensorFwUpdateLibImx500ReadImagePacketHeaderInfo *info) {
   if (common_info == NULL || info == NULL) {
-    DLOG_ERROR("common_info or info is NULL.\n");
+    SEND_DLOG_ERROR("common_info or info is NULL.\n");
     return kEdcSensorFwUpdateLibResultInvalidArgument;
   }
 
   if (info->is_read) return kEdcSensorFwUpdateLibResultOk;
 
   if (common_info->data_current >= common_info->data_end) {
-    DLOG_ERROR("data_current >= data_end\n");
+    SEND_DLOG_ERROR("data_current >= data_end\n");
     return kEdcSensorFwUpdateLibResultFailedPrecondition;
   }
 
-  DLOG_DEBUG("bytes_to_next_header: %zu\n", info->bytes_to_next_header);
-  DLOG_DEBUG("remaining_header_size: %zu\n", info->remaining_header_size);
-  DLOG_DEBUG("reaming_data_size: %td\n",
-             common_info->data_end - common_info->data_current);
+  SEND_DLOG_DEBUG("bytes_to_next_header: %zu\n", info->bytes_to_next_header);
+  SEND_DLOG_DEBUG("remaining_header_size: %zu\n", info->remaining_header_size);
+  SEND_DLOG_DEBUG("reaming_data_size: %td\n",
+                  common_info->data_end - common_info->data_current);
 
   if (info->bytes_to_next_header == 0) {
     if (info->remaining_header_size > 0) {
@@ -231,7 +231,7 @@ static EdcSensorFwUpdateLibResult ParseImagePacketHeader(
     if (info->remaining_header_size == 0) {
       // Header is fully read.
       if (!VerifyVersion(info->header.version, sizeof(info->header.version))) {
-        DLOG_ERROR("Invalid version in the image packet header.\n");
+        SEND_DLOG_ERROR("Invalid version in the image packet header.\n");
         return kEdcSensorFwUpdateLibResultInvalidArgument;
       }
 
@@ -241,7 +241,7 @@ static EdcSensorFwUpdateLibResult ParseImagePacketHeader(
       strncpy(info->version, info->header.version, version_end);
       info->version[version_end] = '\0';
 
-      DLOG_INFO("Version: %s\n", info->version);
+      SEND_DLOG_INFO("Version: %s\n", info->version);
       info->is_read = true;
     }
   }
@@ -249,11 +249,11 @@ static EdcSensorFwUpdateLibResult ParseImagePacketHeader(
   common_info->bytes_to_next_loop =
       MIN((size_t)(common_info->data_end - common_info->data_current),
           info->bytes_to_next_header);
-  DLOG_DEBUG("bytes_to_next_loop: %zu\n", common_info->bytes_to_next_loop);
-  DLOG_DEBUG("bytes_to_next_header: %zu\n", info->bytes_to_next_header);
-  DLOG_DEBUG("reaming_data_size: %td\n",
-             common_info->data_end - common_info->data_current);
-  DLOG_DEBUG("---------------------------------\n");
+  SEND_DLOG_DEBUG("bytes_to_next_loop: %zu\n", common_info->bytes_to_next_loop);
+  SEND_DLOG_DEBUG("bytes_to_next_header: %zu\n", info->bytes_to_next_header);
+  SEND_DLOG_DEBUG("reaming_data_size: %td\n",
+                  common_info->data_end - common_info->data_current);
+  SEND_DLOG_DEBUG("---------------------------------\n");
   info->bytes_to_next_header -= common_info->bytes_to_next_loop;
 
   return kEdcSensorFwUpdateLibResultOk;
@@ -314,7 +314,7 @@ static EdcSensorFwUpdateLibResult ReadHeaders(
     EdcSensorFwUpdateLibImx500ReadImagePacketHeaderInfo *image_packet_header,
     const uint8_t *data, size_t data_size) {
   if (download_headers == NULL || image_packet_header == NULL || data == NULL) {
-    DLOG_ERROR("context or mapped_address is NULL.\n");
+    SEND_DLOG_ERROR("context or mapped_address is NULL.\n");
     return kEdcSensorFwUpdateLibResultInvalidArgument;
   }
   typedef enum {
@@ -339,7 +339,7 @@ static EdcSensorFwUpdateLibResult ReadHeaders(
         EdcSensorFwUpdateLibResult ret =
             ParseDownloadHeader(&common, download_headers);
         if (ret != kEdcSensorFwUpdateLibResultOk) {
-          DLOG_ERROR("ParseDownloadHeader failed: %u\n", ret);
+          SEND_DLOG_ERROR("ParseDownloadHeader failed: %u\n", ret);
           return ret;
         }
 
@@ -347,7 +347,7 @@ static EdcSensorFwUpdateLibResult ReadHeaders(
         EdcSensorFwUpdateLibResult ret =
             ParseImagePacketHeader(&common, image_packet_header);
         if (ret != kEdcSensorFwUpdateLibResultOk) {
-          DLOG_ERROR("ParseImagePacketHeader failed: %u\n", ret);
+          SEND_DLOG_ERROR("ParseImagePacketHeader failed: %u\n", ret);
           return ret;
         }
       }
@@ -377,7 +377,7 @@ typedef struct EdcSensorFwUpdateLibImx500AiModelContext {
 
 static bool IsValidContext(EdcSensorFwUpdateLibImx500AiModelContext *context) {
   if (context == EDC_SENSOR_FW_UPDATE_LIB_IMX500_AI_MODEL_HANDLE_INVALID) {
-    DLOG_ERROR("context is NULL.\n");
+    SEND_DLOG_ERROR("context is NULL.\n");
     return false;
   }
 
@@ -390,7 +390,8 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibImx500AiModelOpen(
     EdcSensorFwUpdateLibImx500AiModelHandle *handle) {
   if (fpk_file_path == NULL || network_info_file_path == NULL ||
       handle == NULL) {
-    DLOG_ERROR("fpk_file_path or network_info_file_path or handle is NULL.\n");
+    SEND_DLOG_ERROR(
+        "fpk_file_path or network_info_file_path or handle is NULL.\n");
     return kEdcSensorFwUpdateLibResultInvalidArgument;
   }
 
@@ -398,7 +399,7 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibImx500AiModelOpen(
       (EdcSensorFwUpdateLibImx500AiModelContext *)malloc(
           sizeof(EdcSensorFwUpdateLibImx500AiModelContext));
   if (context == NULL) {
-    DLOG_ERROR("Failed to allocate memory for context.\n");
+    SEND_DLOG_ERROR("Failed to allocate memory for context.\n");
     return kEdcSensorFwUpdateLibResultResourceExhausted;
   }
 
@@ -407,8 +408,8 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibImx500AiModelOpen(
   int r = snprintf(context->fpk_file_path, sizeof(context->fpk_file_path), "%s",
                    fpk_file_path);
   if (r < 0 || (size_t)r >= sizeof(context->fpk_file_path)) {
-    DLOG_ERROR("snprintf failed. ret = %d (buffer size = %zu)\n", r,
-               sizeof(context->fpk_file_path));
+    SEND_DLOG_ERROR("snprintf failed. ret = %d (buffer size = %zu)\n", r,
+                    sizeof(context->fpk_file_path));
     ret = kEdcSensorFwUpdateLibResultInvalidArgument;
     goto err_exit;
   }
@@ -417,16 +418,16 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibImx500AiModelOpen(
                sizeof(context->network_info_file_path), "%s",
                network_info_file_path);
   if (r < 0 || (size_t)r >= sizeof(context->network_info_file_path)) {
-    DLOG_ERROR("snprintf failed. ret = %d (buffer size = %zu)\n", r,
-               sizeof(context->network_info_file_path));
+    SEND_DLOG_ERROR("snprintf failed. ret = %d (buffer size = %zu)\n", r,
+                    sizeof(context->network_info_file_path));
     ret = kEdcSensorFwUpdateLibResultInvalidArgument;
     goto err_exit;
   }
 
   context->fp = fopen(context->fpk_file_path, "wb");
   if (context->fp == NULL) {
-    DLOG_ERROR("Failed to open file: %s (errno = %d)\n", context->fpk_file_path,
-               errno);
+    SEND_DLOG_ERROR("Failed to open file: %s (errno = %d)\n",
+                    context->fpk_file_path, errno);
     ret = kEdcSensorFwUpdateLibResultResourceExhausted;
     goto err_exit;
   }
@@ -458,17 +459,17 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibImx500AiModelWrite(
     EdcSensorFwUpdateLibImx500AiModelHandle handle, const uint8_t *data,
     size_t size) {
   if (data == NULL || size == 0) {
-    DLOG_ERROR("Invalid arguments. data: %p, size: %zu\n", data, size);
+    SEND_DLOG_ERROR("Invalid arguments. data: %p, size: %zu\n", data, size);
     return kEdcSensorFwUpdateLibResultInvalidArgument;
   }
   EdcSensorFwUpdateLibImx500AiModelContext *context =
       (EdcSensorFwUpdateLibImx500AiModelContext *)handle;
   if (!IsValidContext(context)) {
-    DLOG_ERROR("Invalid context\n");
+    SEND_DLOG_ERROR("Invalid context\n");
     return kEdcSensorFwUpdateLibResultInvalidArgument;
   }
   if (context->fp == NULL) {
-    DLOG_ERROR("File pointer is NULL. context->fp: %p\n", context->fp);
+    SEND_DLOG_ERROR("File pointer is NULL. context->fp: %p\n", context->fp);
     return kEdcSensorFwUpdateLibResultInternal;
   }
 
@@ -478,7 +479,7 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibImx500AiModelWrite(
     ret = ReadHeaders(&context->download_headers, &context->image_packet_header,
                       data, size);
     if (ret != kEdcSensorFwUpdateLibResultOk) {
-      DLOG_ERROR("ReadDownloadHeader failed: %u\n", ret);
+      SEND_DLOG_ERROR("ReadDownloadHeader failed: %u\n", ret);
       return ret;
     }
 
@@ -487,7 +488,7 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibImx500AiModelWrite(
       if (write_size > 0) {
         size_t written_size = fwrite(data, 1, write_size, context->fp);
         if (written_size != write_size) {
-          DLOG_ERROR(
+          SEND_DLOG_ERROR(
               "fwrite failed. Target size: %zu, written size: %zu (errno = "
               "%d)\n",
               write_size, written_size, errno);
@@ -500,20 +501,21 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibImx500AiModelWrite(
 
       ret = EdcSensorFwUpdateLibFflushAndFsync(context->fp);
       if (ret != kEdcSensorFwUpdateLibResultOk) {
-        DLOG_ERROR("EdcSensorFwUpdateLibFflushAndFsync failed: %u\n", ret);
+        SEND_DLOG_ERROR("EdcSensorFwUpdateLibFflushAndFsync failed: %u\n", ret);
         return ret;
       }
 
       if (fclose(context->fp) != 0) {
-        DLOG_ERROR("Failed to close file: %s (errno = %d)\n",
-                   context->fpk_file_path, errno);
+        SEND_DLOG_ERROR("Failed to close file: %s (errno = %d)\n",
+                        context->fpk_file_path, errno);
         return kEdcSensorFwUpdateLibResultInternal;
       }
 
       const char *file_path = context->network_info_file_path;
       context->fp           = fopen(file_path, "wb");
       if (context->fp == NULL) {
-        DLOG_ERROR("Failed to open file: %s (errno = %d)\n", file_path, errno);
+        SEND_DLOG_ERROR("Failed to open file: %s (errno = %d)\n", file_path,
+                        errno);
         return kEdcSensorFwUpdateLibResultResourceExhausted;
       }
       context->state = kEdcSensorFwUpdateLibImx500WriteAiModelStateWritingInfo;
@@ -522,7 +524,7 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibImx500AiModelWrite(
 
   size_t written_size = fwrite(data, 1, size, context->fp);
   if (written_size != size) {
-    DLOG_ERROR(
+    SEND_DLOG_ERROR(
         "fwrite failed. Target size: %zu, written size: %zu (errno = %d)\n",
         size, written_size, errno);
     return kEdcSensorFwUpdateLibResultInternal;
@@ -538,7 +540,7 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibImx500AiModelClose(
       (EdcSensorFwUpdateLibImx500AiModelContext *)handle;
 
   if (!IsValidContext(context)) {
-    DLOG_ERROR("Invalid context\n");
+    SEND_DLOG_ERROR("Invalid context\n");
     return kEdcSensorFwUpdateLibResultInvalidArgument;
   }
 
@@ -546,17 +548,34 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibImx500AiModelClose(
     EdcSensorFwUpdateLibResult ret =
         EdcSensorFwUpdateLibFflushAndFsync(context->fp);
     if (ret != kEdcSensorFwUpdateLibResultOk) {
-      DLOG_ERROR("EdcSensorFwUpdateLibFflushAndFsync failed: %u\n", ret);
+      SEND_DLOG_ERROR("EdcSensorFwUpdateLibFflushAndFsync failed: %u\n", ret);
       return ret;
     }
 
     if (fclose(context->fp) != 0) {
-      DLOG_ERROR("Failed to close file: %s (errno = %d)\n",
-                 context->fpk_file_path, errno);
+      SEND_DLOG_ERROR("Failed to close file (errno = %d)\n", errno);
       return kEdcSensorFwUpdateLibResultInternal;
     }
     context->fp = NULL;
   }
+
+  EdcSensorFwUpdateLibResult ret =
+      EdcSensorFwUpdateLibFsyncParentDirectory(context->fpk_file_path);
+  if (ret != kEdcSensorFwUpdateLibResultOk) {
+    SEND_DLOG_ERROR(
+        "EdcSensorFwUpdateLibFsyncParentDirectory(fpk) failed: %u\n", ret);
+    return ret;
+  }
+
+  ret =
+      EdcSensorFwUpdateLibFsyncParentDirectory(context->network_info_file_path);
+  if (ret != kEdcSensorFwUpdateLibResultOk) {
+    SEND_DLOG_ERROR(
+        "EdcSensorFwUpdateLibFsyncParentDirectory(network_info) failed: %u\n",
+        ret);
+    return ret;
+  }
+
   free(context);
   return kEdcSensorFwUpdateLibResultOk;
 }
