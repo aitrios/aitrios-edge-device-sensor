@@ -40,7 +40,11 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibRemoveDirectory(
     const char *dir_path);
 EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibCreateEmptyFile(
     const char *file_path);
+EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibRemoveFileSafely(
+    const char *file_path);
 
 EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibFflushAndFsync(FILE *fp);
+EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibFsyncParentDirectory(
+    const char *path);
 
 #endif /* EDC_SENSOR_FW_UPDATE_LIB_COMMON_H_ */

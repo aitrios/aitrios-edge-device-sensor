@@ -171,7 +171,7 @@ static bool IsSupportedTarget(EdcSensorFwUpdateLibTarget target_component) {
 
 static bool IsValidContext(const EdcSensorFwUpdateLibImplContext *context) {
   if (context == EDC_SENSOR_FW_UPDATE_LIB_IMPL_HANDLE_INVALID) {
-    DLOG_ERROR("Invalid context.\n");
+    SEND_DLOG_ERROR("Invalid context.\n");
     return false;
   }
   return true;
@@ -190,7 +190,7 @@ static void HashToHexString(size_t hash_size, const uint8_t *hash,
 static EdcSensorFwUpdateLibResult RemoveTmpDirectory(void) {
   EdcSensorFwUpdateLibResult ret = EdcSensorFwUpdateLibRemoveDirectory(TMP_DIR);
   if (ret != kEdcSensorFwUpdateLibResultOk) {
-    DLOG_ERROR("Failed to remove temporary directory: %s.\n", TMP_DIR);
+    SEND_DLOG_ERROR("Failed to remove temporary directory: %s.\n", TMP_DIR);
     return ret;
   }
   return kEdcSensorFwUpdateLibResultOk;
@@ -201,14 +201,14 @@ static EdcSensorFwUpdateLibResult ComponentInfoToFilePath(
     const EdcSensorFwUpdateLibComponentInfo *info, char *file_path,
     size_t file_path_size) {
   if (info == NULL || file_path == NULL) {
-    DLOG_ERROR(" info or file_path is NULL.\n");
+    SEND_DLOG_ERROR(" info or file_path is NULL.\n");
     return kEdcSensorFwUpdateLibResultInvalidArgument;
   }
 
   switch (target) {
     case kEdcSensorFwUpdateLibTargetLoader:
     case kEdcSensorFwUpdateLibTargetFirmware:
-      DLOG_ERROR("Unsupported target: %u.\n", target);
+      SEND_DLOG_ERROR("Unsupported target: %u.\n", target);
       return kEdcSensorFwUpdateLibResultUnimplemented;
 
     case kEdcSensorFwUpdateLibTargetAIModel: {
@@ -220,15 +220,15 @@ static EdcSensorFwUpdateLibResult ComponentInfoToFilePath(
                        (EDC_SENSOR_FW_UPDATE_LIB_VERSION_LENGTH - 1),
                        info->version, hash_str);
       if (r < 0 || (size_t)r >= file_path_size) {
-        DLOG_ERROR("snprintf failed. ret = %d (buffer size = %zu)\n", r,
-                   file_path_size);
+        SEND_DLOG_ERROR("snprintf failed. ret = %d (buffer size = %zu)\n", r,
+                        file_path_size);
         return kEdcSensorFwUpdateLibResultInternal;
       }
       break;
     }
 
     default:
-      DLOG_ERROR("Unsupported target: %u.\n", target);
+      SEND_DLOG_ERROR("Unsupported target: %u.\n", target);
       return kEdcSensorFwUpdateLibResultUnimplemented;
   }
 
@@ -304,7 +304,7 @@ static EdcSensorFwUpdateLibImplAiModelFormat Str2FormatEnum(
   } else if (0 == strncmp(string, "BayerRGB", string_size)) {
     return kEdcSensorFwUpdateLibImplAiModelFormatBayerRGB;
   }
-  DLOG_ERROR("Invalid format: %s\n", string);
+  SEND_DLOG_ERROR("Invalid format: %s\n", string);
 
   return kEdcSensorFwUpdateLibImplAiModelFormatInvalid;
 }
@@ -335,13 +335,13 @@ static const char *GetValuePointer(const char *line, size_t line_size,
 
   const char *value_pointer = strnchr(line, '=', line_size);
   if (value_pointer == NULL) {
-    DLOG_ERROR("Invalid format: %*.s\n", (int)line_length, line);
+    SEND_DLOG_ERROR("Invalid format: %*.s\n", (int)line_length, line);
     return NULL;
   }
 
   if (++value_pointer >= line + line_size) {  // ++ is to skip '='
     // In case `line[line_size-1] == '='`
-    DLOG_ERROR("Invalid format: %*.s\n", (int)line_length, line);
+    SEND_DLOG_ERROR("Invalid format: %*.s\n", (int)line_length, line);
     return NULL;
   }
 
@@ -365,7 +365,7 @@ static EdcSensorFwUpdateLibResult ParseAiModelInfo(
     EdcSensorFwUpdateLibImplNetworkInfoKeyIndex key_idx, const char *value,
     size_t value_size, EdcSensorFwUpdateLibImplNetworkInfo *info) {
   if (*value == '\0') {
-    DLOG_ERROR("value is \"\"\n");
+    SEND_DLOG_ERROR("value is \"\"\n");
     return kEdcSensorFwUpdateLibResultInvalidArgument;
   }
 
@@ -380,14 +380,15 @@ static EdcSensorFwUpdateLibResult ParseAiModelInfo(
   errno             = 0;
   long parsed       = strtol(value, &end_pointer, 0);
   if (errno != 0 || *end_pointer != '\0') {
-    DLOG_ERROR("strtol failed. (errno = %d, value = \"%s\")\n", errno, value);
+    SEND_DLOG_ERROR("strtol failed. (errno = %d, value = \"%s\")\n", errno,
+                    value);
     return kEdcSensorFwUpdateLibResultInvalidArgument;
   }
 
   switch (key_idx) {
     case kEdcSensorFwUpdateLibImplNetworkInfoKeyIndexNetworkNum:
       if (parsed != 1) {
-        DLOG_CRITICAL(
+        SEND_DLOG_CRITICAL(
             "Invalid NetworkNum = %ld. (Only NetworkNum = 1 is supported)\n",
             parsed);
         return kEdcSensorFwUpdateLibResultInvalidData;
@@ -454,7 +455,7 @@ static EdcSensorFwUpdateLibResult SetAiModelInfoJson(
     const EdcSensorFwUpdateLibImplNetworkInfo *network_info,
     EdcSensorFwUpdateLibImplAiModelInfoJson *json) {
   if (network_info == NULL || json == NULL) {
-    DLOG_ERROR("network_info or json is NULL\n");
+    SEND_DLOG_ERROR("network_info or json is NULL\n");
     return kEdcSensorFwUpdateLibResultInvalidArgument;
   }
 
@@ -504,7 +505,7 @@ static EdcSensorFwUpdateLibResult SetAiModelInfoJson(
 
     case kEdcSensorFwUpdateLibImplAiModelFormatInvalid:
     default:
-      DLOG_ERROR("Invalid format.\n");
+      SEND_DLOG_ERROR("Invalid format.\n");
       return kEdcSensorFwUpdateLibResultInvalidArgument;
   }
 
@@ -517,8 +518,8 @@ static EdcSensorFwUpdateLibResult SetAiModelInfoJson(
 
   for (size_t i = 0; i < ARRAY_SIZE(json->div_val); ++i) {
     if (json->div_val[i] == 0) {
-      DLOG_CRITICAL("div_val[%zu] = 0 in the JSON file for AI model info.\n",
-                    i);
+      SEND_DLOG_CRITICAL(
+          "div_val[%zu] = 0 in the JSON file for AI model info.\n", i);
       return kEdcSensorFwUpdateLibResultInvalidData;
     }
   }
@@ -546,7 +547,7 @@ static EdcSensorFwUpdateLibResult SaveAiModelInfoAsJsonFile(
     const EdcSensorFwUpdateLibImplAiModelInfoJson *info) {
   FILE *fp = fopen(file_path, "w");
   if (fp == NULL) {
-    DLOG_ERROR("Failed to open %s (errno = %d\n", file_path, errno);
+    SEND_DLOG_ERROR("Failed to open %s (errno = %d\n", file_path, errno);
     return kEdcSensorFwUpdateLibResultInternal;
   }
 
@@ -574,17 +575,27 @@ static EdcSensorFwUpdateLibResult SaveAiModelInfoAsJsonFile(
 
   EdcSensorFwUpdateLibResult ret = EdcSensorFwUpdateLibFflushAndFsync(fp);
   if (ret != kEdcSensorFwUpdateLibResultOk) {
-    DLOG_ERROR("EdcSensorFwUpdateLibFflushAndFsync failed: %u\n", ret);
+    SEND_DLOG_ERROR("EdcSensorFwUpdateLibFflushAndFsync failed: %u\n", ret);
     goto close;
   }
 
 close:
   if (fclose(fp) != 0) {
-    DLOG_ERROR("Failed to close file: %s (errno = %d)\n", file_path, errno);
+    SEND_DLOG_ERROR("Failed to close file: %s (errno = %d)\n", file_path,
+                    errno);
     return kEdcSensorFwUpdateLibResultInternal;
   }
 
-  return ret;
+  if (ret != kEdcSensorFwUpdateLibResultOk) return ret;
+
+  ret = EdcSensorFwUpdateLibFsyncParentDirectory(file_path);
+  if (ret != kEdcSensorFwUpdateLibResultOk) {
+    SEND_DLOG_ERROR("EdcSensorFwUpdateLibFsyncParentDirectory failed: %u\n",
+                    ret);
+    return ret;
+  }
+
+  return kEdcSensorFwUpdateLibResultOk;
 }
 
 static EdcSensorFwUpdateLibResult CreateJsonFileForAiModel(
@@ -592,9 +603,9 @@ static EdcSensorFwUpdateLibResult CreateJsonFileForAiModel(
     const char *json_file_path) {
   FILE *fp = fopen(TMP_NETWORK_INFO_TXT_PATH, "r");
   if (fp == NULL) {
-    DLOG_ERROR("Failed to open file: " TMP_NETWORK_INFO_TXT_PATH
-               " (errno = %d)\n",
-               errno);
+    SEND_DLOG_ERROR("Failed to open file: " TMP_NETWORK_INFO_TXT_PATH
+                    " (errno = %d)\n",
+                    errno);
     return kEdcSensorFwUpdateLibResultInternal;
   }
 
@@ -608,7 +619,8 @@ static EdcSensorFwUpdateLibResult CreateJsonFileForAiModel(
     // fgets guarantees that the string in 'line` ends with a null terminator.
 
     if (!RemoveNewlineAndAtTheEnd(line, sizeof(line))) {
-      DLOG_ERROR("The line is longer than the buffer size (%zu)", sizeof(line));
+      SEND_DLOG_ERROR("The line is longer than the buffer size (%zu)",
+                      sizeof(line));
       ret = kEdcSensorFwUpdateLibResultInternal;
       goto close;
     }
@@ -624,7 +636,7 @@ static EdcSensorFwUpdateLibResult CreateJsonFileForAiModel(
     size_t value_length = 0;
     const char *value   = GetValuePointer(line, sizeof(line), &value_length);
     if (value == NULL) {
-      DLOG_WARNING("Invalid format: %s\n", line);
+      SEND_DLOG_WARNING("Invalid format: %s\n", line);
       continue;
     }
 
@@ -633,7 +645,7 @@ static EdcSensorFwUpdateLibResult CreateJsonFileForAiModel(
     // string.
     ret = ParseAiModelInfo(key_idx, value, value_length, &network_info);
     if (ret != kEdcSensorFwUpdateLibResultOk) {
-      DLOG_ERROR("ParseAiModelInfo failed. ret = %u\n", ret);
+      SEND_DLOG_ERROR("ParseAiModelInfo failed. ret = %u\n", ret);
       goto close;
     }
 
@@ -642,7 +654,7 @@ static EdcSensorFwUpdateLibResult CreateJsonFileForAiModel(
   EdcSensorFwUpdateLibImplAiModelInfoJson ai_model_info_json;
   ret = SetAiModelInfoJson(&network_info, &ai_model_info_json);
   if (ret != kEdcSensorFwUpdateLibResultOk) {
-    DLOG_ERROR("SetAiModelInfoJson failed. ret = %u\n", ret);
+    SEND_DLOG_ERROR("SetAiModelInfoJson failed. ret = %u\n", ret);
     goto close;
   }
   ai_model_info_json.network_name     = network_name;
@@ -650,15 +662,15 @@ static EdcSensorFwUpdateLibResult CreateJsonFileForAiModel(
 
   ret = SaveAiModelInfoAsJsonFile(json_file_path, &ai_model_info_json);
   if (ret != kEdcSensorFwUpdateLibResultOk) {
-    DLOG_ERROR("SaveAiModelInfoAsJsonFile failed. ret = %u\n", ret);
+    SEND_DLOG_ERROR("SaveAiModelInfoAsJsonFile failed. ret = %u\n", ret);
     goto close;
   }
 
 close:
   if (fclose(fp) != 0) {
-    DLOG_ERROR("Failed to close file: " TMP_NETWORK_INFO_TXT_PATH
-               " (errno = %d)\n",
-               errno);
+    SEND_DLOG_ERROR("Failed to close file: " TMP_NETWORK_INFO_TXT_PATH
+                    " (errno = %d)\n",
+                    errno);
     ret = kEdcSensorFwUpdateLibResultInternal;
   }
   return ret;
@@ -667,14 +679,14 @@ close:
 static EdcSensorFwUpdateLibResult OpenAiModel(
     EdcSensorFwUpdateLibImplContext *context) {
   if (context == NULL) {
-    DLOG_ERROR("context is NULL.\n");
+    SEND_DLOG_ERROR("context is NULL.\n");
     return kEdcSensorFwUpdateLibResultInvalidArgument;
   }
 
   // Create the tmp directory if it does not exist.
   if (mkdir(TMP_DIR, 0755) != 0 && errno != EEXIST) {
-    DLOG_ERROR("Failed to create directory: %s (errno = %d).\n", TMP_DIR,
-               errno);
+    SEND_DLOG_ERROR("Failed to create directory: %s (errno = %d).\n", TMP_DIR,
+                    errno);
     return kEdcSensorFwUpdateLibResultInternal;
   }
 
@@ -689,7 +701,7 @@ static EdcSensorFwUpdateLibResult WriteAiModel(
     EdcSensorFwUpdateLibImplContext *context, const uint8_t *data,
     size_t size) {
   if (context == NULL) {
-    DLOG_ERROR("context is NULL.\n");
+    SEND_DLOG_ERROR("context is NULL.\n");
     return kEdcSensorFwUpdateLibResultInvalidArgument;
   }
 
@@ -700,7 +712,7 @@ static EdcSensorFwUpdateLibResult WriteAiModel(
 static EdcSensorFwUpdateLibResult CloseAiModel(
     EdcSensorFwUpdateLibImplContext *context) {
   if (context == NULL) {
-    DLOG_ERROR("context is NULL.\n");
+    SEND_DLOG_ERROR("context is NULL.\n");
     return kEdcSensorFwUpdateLibResultInvalidArgument;
   }
 
@@ -709,7 +721,7 @@ static EdcSensorFwUpdateLibResult CloseAiModel(
     EdcSensorFwUpdateLibResult ret =
         EdcSensorFwUpdateLibImx500AiModelClose(context->imx500_ai_model_handle);
     if (ret != kEdcSensorFwUpdateLibResultOk) {
-      DLOG_ERROR("Failed to close AI model handle. ret = %u\n", ret);
+      SEND_DLOG_ERROR("Failed to close AI model handle. ret = %u\n", ret);
       return ret;
     }
     context->imx500_ai_model_handle =
@@ -723,22 +735,24 @@ static EdcSensorFwUpdateLibResult CloseAiModel(
 /// @param file_path
 static void File2DlogInfo(const char *file_path) {
   if (file_path == NULL) {
-    DLOG_ERROR("file_path is NULL.\n");
+    SEND_DLOG_ERROR("file_path is NULL.\n");
     return;
   }
 
   FILE *fp = fopen(file_path, "r");
   if (fp == NULL) {
-    DLOG_ERROR("Failed to open file: %s (errno = %d).\n", file_path, errno);
+    SEND_DLOG_ERROR("Failed to open file: %s (errno = %d).\n", file_path,
+                    errno);
     return;
   }
 
   char line[LINE_SIZE];
   while (fgets(line, sizeof(line), fp) != NULL) {
-    DLOG_INFO("%s: %s", file_path, line);
+    SEND_DLOG_INFO("%s: %s", file_path, line);
   }
   if (fclose(fp) != 0) {
-    DLOG_ERROR("Failed to close file: %s (errno = %d).\n", file_path, errno);
+    SEND_DLOG_ERROR("Failed to close file: %s (errno = %d).\n", file_path,
+                    errno);
   }
 }
 
@@ -753,7 +767,7 @@ static void SleepMs(long ms) {
       req.tv_sec  = rem.tv_sec;
       req.tv_nsec = rem.tv_nsec;
     } else {
-      DLOG_ERROR("nanosleep failed. errno = %d\n", errno);
+      SEND_DLOG_ERROR("nanosleep failed. errno = %d\n", errno);
       break;
     }
   }
@@ -766,12 +780,12 @@ static void ExecuteFpkToRpk(const char *rpk_path) {
   // Redirect stdout and stderr to a log file
   int fd = open(TMP_FPK2RPK_LOG_PATH, O_WRONLY | O_CREAT | O_TRUNC, 0644);
   if (fd < 0) {
-    DLOG_ERROR("Failed to open log file: %s (errno = %d)\n",
-               TMP_FPK2RPK_LOG_PATH, errno);
+    SEND_DLOG_ERROR("Failed to open log file: %s (errno = %d)\n",
+                    TMP_FPK2RPK_LOG_PATH, errno);
     exit(1);
   }
   if ((dup2(fd, STDOUT_FILENO) == -1) || (dup2(fd, STDERR_FILENO) == -1)) {
-    DLOG_ERROR("dup2 failed. errno = %d\n", errno);
+    SEND_DLOG_ERROR("dup2 failed. errno = %d\n", errno);
     close(fd);
     exit(1);
   }
@@ -781,7 +795,7 @@ static void ExecuteFpkToRpk(const char *rpk_path) {
   execle(FPK2RPK_EXECUTABLE_PATH, FPK2RPK_EXECUTABLE_PATH, "-r",
          TMP_NETWORK_INFO_TXT_PATH, "-o", rpk_path, TMP_NETWORK_FPK_PATH, NULL,
          envp);
-  DLOG_ERROR("fpk2rpk command failed. errno = %d\n", errno);
+  SEND_DLOG_ERROR("fpk2rpk command failed. errno = %d\n", errno);
   exit(1);
 }
 
@@ -805,7 +819,7 @@ static EdcSensorFwUpdateLibResult WaitForChildProcess(pid_t pid) {
       continue;
 
     } else if (r == -1) {
-      DLOG_ERROR("waitpid failed. errno = %d\n", errno);
+      SEND_DLOG_ERROR("waitpid failed. errno = %d\n", errno);
       return kEdcSensorFwUpdateLibResultInternal;
     }
 
@@ -815,9 +829,9 @@ static EdcSensorFwUpdateLibResult WaitForChildProcess(pid_t pid) {
   }  // for (int i = 0; i < EXEC_WAIT_COUNT; ++i
 
   if (is_timeout) {
-    DLOG_ERROR("fpk2rpk command timed out.\n");
+    SEND_DLOG_ERROR("fpk2rpk command timed out.\n");
     if (kill(pid, SIGKILL) != 0) {
-      DLOG_ERROR("kill failed. errno = %d\n", errno);
+      SEND_DLOG_ERROR("kill failed. errno = %d\n", errno);
       return kEdcSensorFwUpdateLibResultInternal;
     }
 
@@ -825,18 +839,19 @@ static EdcSensorFwUpdateLibResult WaitForChildProcess(pid_t pid) {
     SleepMs(100);
 
     if (waitpid(pid, &status, WNOHANG) == -1) {
-      DLOG_ERROR("waitpid failed after kill. errno = %d\n", errno);
+      SEND_DLOG_ERROR("waitpid failed after kill. errno = %d\n", errno);
     }
     return kEdcSensorFwUpdateLibResultInternal;
   }
 
   if (WIFEXITED(status) != 0) {
     if (WEXITSTATUS(status) != 0) {
-      DLOG_ERROR("fpk2rpk command failed. ret = %d\n", WEXITSTATUS(status));
+      SEND_DLOG_ERROR("fpk2rpk command failed. ret = %d\n",
+                      WEXITSTATUS(status));
       return kEdcSensorFwUpdateLibResultInternal;
     }
   } else {
-    DLOG_ERROR("fpk2rpk command exitted abnormally.\n");
+    SEND_DLOG_ERROR("fpk2rpk command exitted abnormally.\n");
     return kEdcSensorFwUpdateLibResultInternal;
   }
 
@@ -851,7 +866,7 @@ static EdcSensorFwUpdateLibResult ConvertFpkToRpk(const char *rpk_path) {
   pid_t pid = fork();
 
   if (pid < 0) {
-    DLOG_ERROR("fork failed. (errno = %d)\n", errno);
+    SEND_DLOG_ERROR("fork failed. (errno = %d)\n", errno);
     return kEdcSensorFwUpdateLibResultInternal;
 
   } else if (pid == 0) {
@@ -859,14 +874,14 @@ static EdcSensorFwUpdateLibResult ConvertFpkToRpk(const char *rpk_path) {
 
     // This line should never be reached, but in case it is reached,
     // log an error and exit with a non-zero status.
-    DLOG_CRITICAL("ExecuteFpkToRpk() returned unexpectedly.\n");
+    SEND_DLOG_CRITICAL("ExecuteFpkToRpk() returned unexpectedly.\n");
     exit(1);
 
   } else {
     EdcSensorFwUpdateLibResult ret = WaitForChildProcess(pid);
     File2DlogInfo(TMP_FPK2RPK_LOG_PATH);
     if (ret != kEdcSensorFwUpdateLibResultOk) {
-      DLOG_ERROR("WaitForChildProcess failed. (ret = %u)\n", ret);
+      SEND_DLOG_ERROR("WaitForChildProcess failed. (ret = %u)\n", ret);
       return ret;
     }
   }
@@ -895,8 +910,8 @@ static EdcSensorFwUpdateLibResult ComponentInfoToJsonFilePath(
                    "/custom_%6s.json",
                    ai_model_bundle_id);
   if (r < 0 || (size_t)r >= file_path_size) {
-    DLOG_ERROR("snprintf failed. ret = %d (buffer size = %zu)\n", r,
-               file_path_size);
+    SEND_DLOG_ERROR("snprintf failed. ret = %d (buffer size = %zu)\n", r,
+                    file_path_size);
     return kEdcSensorFwUpdateLibResultInternal;
   }
 
@@ -906,7 +921,7 @@ static EdcSensorFwUpdateLibResult ComponentInfoToJsonFilePath(
 static EdcSensorFwUpdateLibResult CompleteWriteAiModel(
     EdcSensorFwUpdateLibImplContext *context) {
   if (context == NULL) {
-    DLOG_ERROR("context is NULL.\n");
+    SEND_DLOG_ERROR("context is NULL.\n");
     return kEdcSensorFwUpdateLibResultInvalidArgument;
   }
 
@@ -915,13 +930,13 @@ static EdcSensorFwUpdateLibResult CompleteWriteAiModel(
       context->target_component, context->component_info, context->file_path,
       sizeof(context->file_path));
   if (ret != kEdcSensorFwUpdateLibResultOk) {
-    DLOG_ERROR("ComponentInfoToFilePath failed. (ret = %u)\n", ret);
+    SEND_DLOG_ERROR("ComponentInfoToFilePath failed. (ret = %u)\n", ret);
     return ret;
   }
 
   ret = ConvertFpkToRpk(context->file_path);
   if (ret != kEdcSensorFwUpdateLibResultOk) {
-    DLOG_ERROR("ConvertFpkToRpk failed. (ret = %u)\n", ret);
+    SEND_DLOG_ERROR("ConvertFpkToRpk failed. (ret = %u)\n", ret);
     return ret;
   }
 
@@ -929,29 +944,29 @@ static EdcSensorFwUpdateLibResult CompleteWriteAiModel(
   ret = ComponentInfoToJsonFilePath(context->component_info, json_file_path,
                                     sizeof(json_file_path));
   if (ret != kEdcSensorFwUpdateLibResultOk) {
-    DLOG_ERROR("ComponentInfoToJsonFilePath failed. (ret = %u)\n", ret);
+    SEND_DLOG_ERROR("ComponentInfoToJsonFilePath failed. (ret = %u)\n", ret);
     return ret;
   }
 
   char network_name[PATH_MAX];
   int r = snprintf(network_name, sizeof(network_name), "imx500_no_process");
   if (r < 0 || (size_t)r >= sizeof(network_name)) {
-    DLOG_ERROR("snprintf failed. ret = %d (buffer size = %zu)\n", r,
-               sizeof(network_name));
+    SEND_DLOG_ERROR("snprintf failed. ret = %d (buffer size = %zu)\n", r,
+                    sizeof(network_name));
     return kEdcSensorFwUpdateLibResultInternal;
   }
 
   ret = CreateJsonFileForAiModel(network_name, context->file_path,
                                  json_file_path);
   if (ret != kEdcSensorFwUpdateLibResultOk) {
-    DLOG_ERROR("CreateJsonFileForAiModel failed. (ret = %u)\n", ret);
+    SEND_DLOG_ERROR("CreateJsonFileForAiModel failed. (ret = %u)\n", ret);
     return ret;
   }
 
   EdcSensorFwUpdateLibResult tmp_ret = RemoveTmpDirectory();
   if (tmp_ret != kEdcSensorFwUpdateLibResultOk) {
-    DLOG_WARNING("RemoveTmpDirectory failed. (ret = %u) Continue anyway.\n",
-                 tmp_ret);
+    SEND_DLOG_WARNING(
+        "RemoveTmpDirectory failed. (ret = %u) Continue anyway.\n", tmp_ret);
   }
 
   return kEdcSensorFwUpdateLibResultOk;
@@ -965,39 +980,31 @@ static EdcSensorFwUpdateLibResult CancelWriteAiModel(
       context->target_component, context->component_info, file_path,
       sizeof(file_path));
   if (ret != kEdcSensorFwUpdateLibResultOk) {
-    DLOG_ERROR("ComponentInfoToFilePath failed. (ret = %u)\n", ret);
+    SEND_DLOG_ERROR("ComponentInfoToFilePath failed. (ret = %u)\n", ret);
     return ret;
   }
 
-  if (remove(file_path) != 0) {
-    if (errno == ENOENT) {
-      DLOG_INFO("File does not exist: %s\n", file_path);
-    } else {
-      DLOG_WARNING("Failed to delete file: %s (errno = %d)\n", file_path,
-                   errno);
-    }
+  ret = EdcSensorFwUpdateLibRemoveFileSafely(file_path);
+  if (ret != kEdcSensorFwUpdateLibResultOk) {
+    SEND_DLOG_WARNING("Failed to delete file: %s (ret = %u)\n", file_path, ret);
   }
 
   ret = ComponentInfoToJsonFilePath(context->component_info, file_path,
                                     sizeof(file_path));
   if (ret != kEdcSensorFwUpdateLibResultOk) {
-    DLOG_ERROR("ComponentInfoToJsonFilePath failed. (ret = %u)\n", ret);
+    SEND_DLOG_ERROR("ComponentInfoToJsonFilePath failed. (ret = %u)\n", ret);
     return ret;
   }
 
-  if (remove(file_path) != 0) {
-    if (errno == ENOENT) {
-      DLOG_INFO("File does not exist: %s\n", file_path);
-    } else {
-      DLOG_WARNING("Failed to delete file: %s (errno = %d)\n", file_path,
-                   errno);
-    }
+  ret = EdcSensorFwUpdateLibRemoveFileSafely(file_path);
+  if (ret != kEdcSensorFwUpdateLibResultOk) {
+    SEND_DLOG_WARNING("Failed to delete file: %s (ret = %u)\n", file_path, ret);
   }
 
   EdcSensorFwUpdateLibResult tmp_ret = RemoveTmpDirectory();
   if (tmp_ret != kEdcSensorFwUpdateLibResultOk) {
-    DLOG_WARNING("RemoveTmpDirectory failed. (ret = %u) Continue anyway.\n",
-                 tmp_ret);
+    SEND_DLOG_WARNING(
+        "RemoveTmpDirectory failed. (ret = %u) Continue anyway.\n", tmp_ret);
   }
 
   return kEdcSensorFwUpdateLibResultOk;
@@ -1006,7 +1013,7 @@ static EdcSensorFwUpdateLibResult CancelWriteAiModel(
 static EdcSensorFwUpdateLibResult EraseAiModel(
     const EdcSensorFwUpdateLibComponentInfo *component_info) {
   if (component_info == NULL) {
-    DLOG_ERROR("component_info is NULL.\n");
+    SEND_DLOG_ERROR("component_info is NULL.\n");
     return kEdcSensorFwUpdateLibResultInvalidArgument;
   }
 
@@ -1018,14 +1025,13 @@ static EdcSensorFwUpdateLibResult EraseAiModel(
                               component_info, file_path, sizeof(file_path));
 
   if (ret != kEdcSensorFwUpdateLibResultOk) {
-    DLOG_ERROR("ComponentInfoToFilePath failed. (ret = %u)\n", ret);
+    SEND_DLOG_ERROR("ComponentInfoToFilePath failed. (ret = %u)\n", ret);
     error_occurred = true;
 
-  } else if (remove(file_path) != 0) {
-    if (errno == ENOENT) {
-      DLOG_INFO("File does not exist: %s\n", file_path);
-    } else {
-      DLOG_ERROR("Failed to delete file: %s (errno = %d)\n", file_path, errno);
+  } else {
+    ret = EdcSensorFwUpdateLibRemoveFileSafely(file_path);
+    if (ret != kEdcSensorFwUpdateLibResultOk) {
+      SEND_DLOG_ERROR("Failed to delete file: %s (ret = %u)\n", file_path, ret);
       error_occurred = true;
     }
   }
@@ -1034,13 +1040,12 @@ static EdcSensorFwUpdateLibResult EraseAiModel(
   ret =
       ComponentInfoToJsonFilePath(component_info, file_path, sizeof(file_path));
   if (ret != kEdcSensorFwUpdateLibResultOk) {
-    DLOG_ERROR("ComponentInfoToFilePath failed. (ret = %u)\n", ret);
+    SEND_DLOG_ERROR("ComponentInfoToFilePath failed. (ret = %u)\n", ret);
     error_occurred = true;
-  } else if (remove(file_path) != 0) {
-    if (errno == ENOENT) {
-      DLOG_INFO("File does not exist: %s\n", file_path);
-    } else {
-      DLOG_ERROR("Failed to delete file: %s (errno = %d)\n", file_path, errno);
+  } else {
+    ret = EdcSensorFwUpdateLibRemoveFileSafely(file_path);
+    if (ret != kEdcSensorFwUpdateLibResultOk) {
+      SEND_DLOG_ERROR("Failed to delete file: %s (ret = %u)\n", file_path, ret);
       error_occurred = true;
     }
   }
@@ -1069,7 +1074,7 @@ static const EdcSensorFwUpdateLibImplFunctions *GetFunctions(
       return &kEdcSensorFwUpdateLibAiModelFunctions;
 
     default:
-      DLOG_ERROR("Unsupported target component: %u.\n", target_component);
+      SEND_DLOG_ERROR("Unsupported target component: %u.\n", target_component);
       return NULL;
   }
 }
@@ -1081,12 +1086,12 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibImplBeginWrite(
   (void)target_device;  // Unused
 
   if (!IsSupportedTarget(target_component)) {
-    DLOG_ERROR("Unsupported target component: %u.\n", target_component);
+    SEND_DLOG_ERROR("Unsupported target component: %u.\n", target_component);
     return kEdcSensorFwUpdateLibResultUnimplemented;
   }
 
   if (component_info == NULL || handle == NULL) {
-    DLOG_ERROR("component_info or handle is NULL.\n");
+    SEND_DLOG_ERROR("component_info or handle is NULL.\n");
     return kEdcSensorFwUpdateLibResultInvalidArgument;
   }
 
@@ -1096,7 +1101,7 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibImplBeginWrite(
       (EdcSensorFwUpdateLibImplContext *)malloc(
           sizeof(EdcSensorFwUpdateLibImplContext));
   if (context == NULL) {
-    DLOG_ERROR("Failed to allocate memory for context.\n");
+    SEND_DLOG_ERROR("Failed to allocate memory for context.\n");
     return kEdcSensorFwUpdateLibResultResourceExhausted;
   }
 
@@ -1108,8 +1113,8 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibImplBeginWrite(
 
   context->func = GetFunctions(target_component);
   if (context->func == NULL) {
-    DLOG_ERROR("No functions registered for target component: %u.\n",
-               target_component);
+    SEND_DLOG_ERROR("No functions registered for target component: %u.\n",
+                    target_component);
     ret = kEdcSensorFwUpdateLibResultUnimplemented;
     goto err_exit;
   }
@@ -1118,14 +1123,14 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibImplBeginWrite(
                                 context->file_path, sizeof(context->file_path));
 
   if (ret != kEdcSensorFwUpdateLibResultOk) {
-    DLOG_ERROR("ComponentInfoToFilePath failed. (ret = %u)\n", ret);
+    SEND_DLOG_ERROR("ComponentInfoToFilePath failed. (ret = %u)\n", ret);
     ret = kEdcSensorFwUpdateLibResultInternal;
     goto err_exit;
   }
 
   if (context->func->open == NULL) {
-    DLOG_ERROR("func->open is not registered for target component: %u.\n",
-               context->target_component);
+    SEND_DLOG_ERROR("func->open is not registered for target component: %u.\n",
+                    context->target_component);
     ret = kEdcSensorFwUpdateLibResultInternal;
     goto err_exit;
   }
@@ -1133,7 +1138,7 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibImplBeginWrite(
 
   ret = context->func->open(context);
   if (ret != kEdcSensorFwUpdateLibResultOk) {
-    DLOG_ERROR("func->open failed: %u\n", ret);
+    SEND_DLOG_ERROR("func->open failed: %u\n", ret);
     goto err_exit;
   }
 
@@ -1155,24 +1160,24 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibImplCompleteWrite(
   EdcSensorFwUpdateLibImplContext *context =
       (EdcSensorFwUpdateLibImplContext *)handle;
   if (!IsValidContext(context)) {
-    DLOG_ERROR("Invalid context.\n");
+    SEND_DLOG_ERROR("Invalid context.\n");
     return kEdcSensorFwUpdateLibResultInvalidArgument;
   }
 
   if (context->state != kEdcSensorFwUpdateLibImplStateOpen) {
-    DLOG_ERROR("Invalid state: %u.\n", context->state);
+    SEND_DLOG_ERROR("Invalid state: %u.\n", context->state);
     return kEdcSensorFwUpdateLibResultFailedPrecondition;
   }
 
   if (context->func == NULL || context->func->close == NULL) {
-    DLOG_ERROR("func->close is not registered for target component: %u.\n",
-               context->target_component);
+    SEND_DLOG_ERROR("func->close is not registered for target component: %u.\n",
+                    context->target_component);
     return kEdcSensorFwUpdateLibResultInternal;
   }
 
   EdcSensorFwUpdateLibResult ret = context->func->close(context);
   if (ret != kEdcSensorFwUpdateLibResultOk) {
-    DLOG_ERROR("func->close failed: %u\n", ret);
+    SEND_DLOG_ERROR("func->close failed: %u\n", ret);
     return ret;
   }
 
@@ -1181,7 +1186,7 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibImplCompleteWrite(
   if (context->func->complete_write != NULL) {
     ret = context->func->complete_write(context);
     if (ret != kEdcSensorFwUpdateLibResultOk) {
-      DLOG_ERROR("func->complete_write failed: %u\n", ret);
+      SEND_DLOG_ERROR("func->complete_write failed: %u\n", ret);
       return ret;
     }
   }
@@ -1196,13 +1201,13 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibImplCancelWrite(
   EdcSensorFwUpdateLibImplContext *context =
       (EdcSensorFwUpdateLibImplContext *)handle;
   if (!IsValidContext(context)) {
-    DLOG_ERROR("Invalid context.\n");
+    SEND_DLOG_ERROR("Invalid context.\n");
     return kEdcSensorFwUpdateLibResultInvalidArgument;
   }
   EdcSensorFwUpdateLibResult ret = kEdcSensorFwUpdateLibResultOk;
   if (context->state == kEdcSensorFwUpdateLibImplStateOpen) {
     if (context->func == NULL || context->func->cancel_write == NULL) {
-      DLOG_ERROR(
+      SEND_DLOG_ERROR(
           "func->cancel_write is not registered for target component: %u.\n",
           context->target_component);
       return kEdcSensorFwUpdateLibResultInternal;
@@ -1210,7 +1215,7 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibImplCancelWrite(
 
     ret = context->func->close(context);
     if (ret != kEdcSensorFwUpdateLibResultOk) {
-      DLOG_ERROR("func->close failed: %u\n", ret);
+      SEND_DLOG_ERROR("func->close failed: %u\n", ret);
       return ret;
     }
 
@@ -1220,7 +1225,7 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibImplCancelWrite(
   if (context->func != NULL && context->func->cancel_write != NULL) {
     ret = context->func->cancel_write(context);
     if (ret != kEdcSensorFwUpdateLibResultOk) {
-      DLOG_ERROR("func->cancel_write failed: %u\n", ret);
+      SEND_DLOG_ERROR("func->cancel_write failed: %u\n", ret);
       return ret;
     }
   }
@@ -1236,18 +1241,18 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibImplWrite(
   EdcSensorFwUpdateLibImplContext *context =
       (EdcSensorFwUpdateLibImplContext *)handle;
   if (!IsValidContext(context)) {
-    DLOG_ERROR("Invalid context.\n");
+    SEND_DLOG_ERROR("Invalid context.\n");
     return kEdcSensorFwUpdateLibResultInvalidArgument;
   }
 
   if (context->state != kEdcSensorFwUpdateLibImplStateOpen) {
-    DLOG_ERROR("Invalid state: %u.\n", context->state);
+    SEND_DLOG_ERROR("Invalid state: %u.\n", context->state);
     return kEdcSensorFwUpdateLibResultFailedPrecondition;
   }
 
   if (context->func == NULL || context->func->write == NULL) {
-    DLOG_ERROR("func->write is not registered for target component: %u.\n",
-               context->target_component);
+    SEND_DLOG_ERROR("func->write is not registered for target component: %u.\n",
+                    context->target_component);
     return kEdcSensorFwUpdateLibResultInternal;
   }
 
@@ -1255,21 +1260,21 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibImplWrite(
   EsfMemoryManagerResult mem_ret =
       EsfMemoryManagerMap(memory_handle, NULL, size, &mapped_address);
   if (mem_ret != kEsfMemoryManagerResultSuccess || mapped_address == NULL) {
-    DLOG_ERROR("EsfMemoryManagerMap failed: %u\n", mem_ret);
+    SEND_DLOG_ERROR("EsfMemoryManagerMap failed: %u\n", mem_ret);
     return kEdcSensorFwUpdateLibResultResourceExhausted;
   }
 
   EdcSensorFwUpdateLibResult ret =
       context->func->write(context, mapped_address, size);
   if (ret != kEdcSensorFwUpdateLibResultOk) {
-    DLOG_ERROR("func->write failed: %u\n", ret);
+    SEND_DLOG_ERROR("func->write failed: %u\n", ret);
     goto unmap_and_exit;
   }
 
 unmap_and_exit:
   mem_ret = EsfMemoryManagerUnmap(memory_handle, NULL);
   if (mem_ret != kEsfMemoryManagerResultSuccess) {
-    DLOG_ERROR("EsfMemoryManagerUnmap failed: %u\n", mem_ret);
+    SEND_DLOG_ERROR("EsfMemoryManagerUnmap failed: %u\n", mem_ret);
     ret = kEdcSensorFwUpdateLibResultInternal;
   }
   return ret;
@@ -1282,17 +1287,18 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibImplErase(
       GetFunctions(target_component);
   (void)target_device;  // Unused
   if (func == NULL) {
-    DLOG_ERROR("Component %u is not supported.\n", target_component);
+    SEND_DLOG_ERROR("Component %u is not supported.\n", target_component);
     return kEdcSensorFwUpdateLibResultUnimplemented;
   }
   if (func->erase == NULL) {
-    DLOG_ERROR("Erasing component %u is not supported.\n", target_component);
+    SEND_DLOG_ERROR("Erasing component %u is not supported.\n",
+                    target_component);
     return kEdcSensorFwUpdateLibResultUnimplemented;
   }
 
   EdcSensorFwUpdateLibResult ret = func->erase(component_info);
   if (ret != kEdcSensorFwUpdateLibResultOk) {
-    DLOG_ERROR("func->erase failed: %u\n", ret);
+    SEND_DLOG_ERROR("func->erase failed: %u\n", ret);
     return ret;
   }
 
@@ -1303,7 +1309,7 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibImplGetMaxDataSizeOnce(
     EdcSensorFwUpdateLibImplHandle handle, uint32_t *size) {
   (void)handle;
   if (size == NULL) {
-    DLOG_ERROR("size is NULL.\n");
+    SEND_DLOG_ERROR("size is NULL.\n");
     return kEdcSensorFwUpdateLibResultInvalidArgument;
   }
 
@@ -1326,7 +1332,7 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibImplGetPstorageItemId(
   (void)target_device;
 
   if (item_id == NULL) {
-    DLOG_ERROR("item_id is NULL.\n");
+    SEND_DLOG_ERROR("item_id is NULL.\n");
     return kEdcSensorFwUpdateLibResultInvalidArgument;
   }
 
@@ -1342,7 +1348,7 @@ EdcSensorFwUpdateLibResult EdcSensorFwUpdateLibImplGetPstorageItemId(
     case kEdcSensorFwUpdateLibTargetLoader:
     case kEdcSensorFwUpdateLibTargetFirmware:
     default:
-      DLOG_ERROR("Unsupported target component: %u.\n", target_component);
+      SEND_DLOG_ERROR("Unsupported target component: %u.\n", target_component);
       return kEdcSensorFwUpdateLibResultUnimplemented;
   }
 
@@ -1356,7 +1362,7 @@ bool EdcSensorFwUpdateLibImplCompareComponents(
   (void)target_device;  // Unused
 
   if (info_1 == NULL || info_2 == NULL) {
-    DLOG_ERROR("info_1 or info_2 is NULL.\n");
+    SEND_DLOG_ERROR("info_1 or info_2 is NULL.\n");
     return false;
   }
 
@@ -1376,7 +1382,7 @@ bool EdcSensorFwUpdateLibImplCompareComponents(
     case kEdcSensorFwUpdateLibTargetLoader:
     case kEdcSensorFwUpdateLibTargetFirmware:
     default:
-      DLOG_ERROR("Unsupported target component: %u.\n", target_component);
+      SEND_DLOG_ERROR("Unsupported target component: %u.\n", target_component);
       return false;
   }
 
