@@ -1,5 +1,5 @@
 [wrap-git]
 directory = wasm-micro-runtime
 url = https://github.com/midokura/wasm-micro-runtime.git
-revision = bcf21179ff759ce24623d52da0b72a07370bf01f
+revision = f062e0ad8a8842978f17080ce02160e5225319f5
 patch_directory = wasm-micro-runtime
