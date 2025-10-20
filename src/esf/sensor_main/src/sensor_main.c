@@ -7,9 +7,9 @@
 #include "sensor_main.h"
 
 #include "senscord/c_api/senscord_c_api.h"
+#include "sensor_main_impl.h"
 #include "utility_log.h"
 #include "utility_log_module_id.h"
-#include "sensor_main_impl.h"
 
 #define ESF_SENSOR_MAIN_LOG(level, fmt, ...)                                  \
   UtilityLogWriteDLog(MODULE_ID_SENSOR, level, "[%s:%d] " fmt "\n", __FILE__, \
@@ -30,7 +30,7 @@
 extern int senscord_init_native_lib(void);
 extern void senscord_deinit_native_lib(void);
 
-static senscord_core_t core_ = 0;
+static senscord_core_t core_   = 0;
 static int native_initialized_ = 0;
 
 EsfSensorErrCode EsfSensorInit(void) {
@@ -103,9 +103,7 @@ void EsfSensorPowerOFF(void) {
   // Stub implementation
 }
 
-EsfSensorErrCode EsfSensorUtilitySetupFiles(void) {
-  return kEsfSensorOk;
-}
+EsfSensorErrCode EsfSensorUtilitySetupFiles(void) { return kEsfSensorOk; }
 
 EsfSensorErrCode EsfSensorUtilityVerifyFiles(void) {
   EsfSensorErrCode ret = EsfSensorUtilityVerifyFilesImpl();
@@ -115,7 +113,6 @@ EsfSensorErrCode EsfSensorUtilityVerifyFiles(void) {
   }
   return kEsfSensorOk;
 }
-
 
 EsfSensorErrCode EsfSensorUtilityResetFiles(void) {
   EsfSensorErrCode ret = EsfSensorUtilityResetFilesImpl();

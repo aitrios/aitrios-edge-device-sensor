@@ -173,8 +173,8 @@ UtilityLogStatus UtilityLogRegisterSetDlogLevelCallback(
 UtilityLogStatus UtilityLogUnregisterSetDlogLevelCallback(
     UtilityLogHandle handle);
 
-UtilityLogStatus UtilityLogSetDLogLevel(
-    uint32_t module_id, UtilityLogDlogLevel level);
+UtilityLogStatus UtilityLogSetDLogLevel(uint32_t module_id,
+                                        UtilityLogDlogLevel level);
 
 // Macro definition for Dlog
 #define DLOG_CRITICAL(handle, format, ...)                          \
