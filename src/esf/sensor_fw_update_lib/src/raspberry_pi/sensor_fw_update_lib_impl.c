@@ -451,6 +451,32 @@ static EdcSensorFwUpdateLibResult ParseAiModelInfo(
   return kEdcSensorFwUpdateLibResultOk;
 }
 
+/* decimal point places between bit5 and bit4.. */
+#define LEV_PL_GAIN_DEC_SHT            (5)
+#define LEV_PL_NORM_YM_YADD_SIGNED_SHT (8) /* bit8 is sign bit. */
+#define LEV_PL_NORM_YM_YADD_MASK       (0x01FF)
+/* decimal point places between bit10 and bit9. */
+#define YCMTRX_KX0_2_DEC_SHT    (10)
+#define YCMTRX_KX0_2_SIGNED_SHT (11) /* bit11 is sign bit. */
+#define YCMTRX_KX0_2_MASK       (0x0FFF)
+/* decimal point places between bit4 and bit3. */
+#define YCMTRX_KX3_DEC_SHT    (4)
+#define YCMTRX_KX3_SIGNED_SHT (12) /* bit12 is sign bit. */
+#define YCMTRX_KX3_MASK       (0x1FFF)
+#define ROT_DNN_NORM_SIGNED_SHT (8)
+#define ROT_DNN_NORM_MASK       (0x01FF)
+static int conv_reg_signed(uint32_t reg_val, uint8_t signed_bit,
+                           uint32_t reg_mask) {
+  int conv_val;
+
+  if (((reg_val >> signed_bit) & 1) == 0) {
+    conv_val = reg_val;
+  } else {
+    conv_val = -((~reg_val + 1) & reg_mask);
+  }
+  return conv_val;
+}
+
 static EdcSensorFwUpdateLibResult SetAiModelInfoJson(
     const EdcSensorFwUpdateLibImplNetworkInfo *network_info,
     EdcSensorFwUpdateLibImplAiModelInfoJson *json) {
@@ -464,42 +490,54 @@ static EdcSensorFwUpdateLibResult SetAiModelInfoJson(
     case kEdcSensorFwUpdateLibImplAiModelFormatRGB: {
       num_channels = 3;
       for (size_t i = 0; i < num_channels; ++i) {
-        json->norm_val[i]   = network_info->input_tensor_norm_k[i][3];
-        json->norm_shift[i] = 4;  // fixed
-        json->div_val[i]    = network_info->input_tensor_norm_k[i][i];
+        json->norm_val[i] =
+            conv_reg_signed(network_info->input_tensor_norm_k[i][3],
+                            YCMTRX_KX3_SIGNED_SHT, YCMTRX_KX3_MASK);
+        json->norm_shift[i] = YCMTRX_KX3_DEC_SHT;  // fixed
+        json->div_val[i] =
+            conv_reg_signed(network_info->input_tensor_norm_k[i][i],
+                            YCMTRX_KX0_2_SIGNED_SHT, YCMTRX_KX0_2_MASK);
       }
-      json->div_shift = 6;  // fixed;
+      json->div_shift = YCMTRX_KX0_2_DEC_SHT - YCMTRX_KX3_DEC_SHT;  // fixed;
       break;
     }
 
     case kEdcSensorFwUpdateLibImplAiModelFormatBGR: {
       num_channels = 3;
       for (size_t i = 0; i < num_channels; ++i) {
-        json->norm_val[i]   = network_info->input_tensor_norm_k[i][3];
-        json->norm_shift[i] = 4;  // fixed
-        json->div_val[i]    = network_info->input_tensor_norm_k[i][2 - i];
+        json->norm_val[i] =
+            conv_reg_signed(network_info->input_tensor_norm_k[i][3],
+                            YCMTRX_KX3_SIGNED_SHT, YCMTRX_KX3_MASK);
+        json->norm_shift[i] = YCMTRX_KX3_DEC_SHT;  // fixed
+        json->div_val[i] =
+            conv_reg_signed(network_info->input_tensor_norm_k[i][2 - i],
+                            YCMTRX_KX0_2_SIGNED_SHT, YCMTRX_KX0_2_MASK);
       }
-      json->div_shift = 6;  // fixed;
+      json->div_shift = YCMTRX_KX0_2_DEC_SHT - YCMTRX_KX3_DEC_SHT;  // fixed;
       break;
     }
 
     case kEdcSensorFwUpdateLibImplAiModelFormatY: {
       num_channels        = 1;
-      json->norm_val[0]   = network_info->input_norm_y_add;
+      json->norm_val[0]   = conv_reg_signed(network_info->input_norm_y_add,
+                                            LEV_PL_NORM_YM_YADD_SIGNED_SHT,
+                                            LEV_PL_NORM_YM_YADD_MASK);
       json->norm_shift[0] = 0;  // fixed
       json->div_val[0]    = network_info->input_norm_y_gain;
-      json->div_shift     = 5;  // fixed
+      json->div_shift     = LEV_PL_GAIN_DEC_SHT;  // fixed
       break;
     }
 
     case kEdcSensorFwUpdateLibImplAiModelFormatBayerRGB: {
       num_channels = 4;
       for (size_t i = 0; i < num_channels; ++i) {
-        json->norm_val[i]   = network_info->input_norm[i];
+        json->norm_val[i] =
+            conv_reg_signed(network_info->input_norm[i],
+                            ROT_DNN_NORM_SIGNED_SHT, ROT_DNN_NORM_MASK);
         json->norm_shift[i] = network_info->input_norm_shift[i];
         json->div_val[i]    = network_info->input_norm_y_gain;
       }
-      json->div_shift = 5;  // fixed
+      json->div_shift = LEV_PL_GAIN_DEC_SHT;  // fixed
       break;
     }
 
