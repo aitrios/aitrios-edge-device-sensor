@@ -1,6 +1,6 @@
 project('edc-sensor',
         'c', 'cpp',
-        version: '0.1.17')
+        version: '0.1.20')
 
 cmake = import('cmake')
 
