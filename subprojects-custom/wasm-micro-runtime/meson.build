@@ -2,6 +2,19 @@ wasm_wrap = subproject('wasm-micro-runtime', required: false)
 wamr_src = meson.source_root() + '/subprojects/wasm-micro-runtime'
 wamr_prod_src = join_paths(wamr_src, 'product-mini', 'platforms', 'linux')
 wamr_build_dir = join_paths(meson.build_root(), 'wamr_build')
+
+# Determine if building for T4R
+is_t4r_build = get_option('senscord_core_t4r_build') or get_option('senscord_component_t4r_build')
+
+# External delegate options - only enabled for T4R
+external_delegate_options = is_t4r_build ? \
+  ' -DWAMR_BUILD_WASI_NN_ENABLE_EXTERNAL_DELEGATE=1' + \
+  ' -DWAMR_BUILD_WASI_NN_EXTERNAL_DELEGATE_PATH="/usr/lib/libvx_delegate.so"' \
+  : ''
+
+message('external_delegate_options: @0@'.format(external_delegate_options))
+message('================================')
+
 build_wamr = custom_target(
   'build_wamr',
   output: ['libiwasm.so','iwasm', '**.so.*'],
@@ -20,7 +33,7 @@ build_wamr = custom_target(
       ' -DWAMR_BUILD_WASI_NN_TFLITE=1' +
       ' -DWAMR_BUILD_WASI_NN_ONNXRUNTIME=1' +
       ' -DWAMR_BUILD_WASI_NN_ENABLE_EXT=1' +
-      ' -DWASI_NN_EXT_DELEGATE_PATH="/usr/lib/libvx_delegate.so"' +
+      external_delegate_options +
       ' -DCMAKE_C_FLAGS="-DAPP_THREAD_STACK_SIZE_DEFAULT=10485760 -DAPP_THREAD_STACK_SIZE_MIN=10485760"' + ' && ' +
     'cmake --build . --parallel $(nproc) --verbose'
   ],
