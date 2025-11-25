@@ -1,0 +1,7 @@
+# Unit Test artifacts
+test/**/build/
+test/**/coverage/
+test/**/allure/
+test/**/allure-results/
+test/**/*.info
+gtest_results.xml

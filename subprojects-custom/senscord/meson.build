@@ -21,6 +21,7 @@ build_senscord = custom_target(
       ' -DSENSCORD_LOG_ENABLED=ON' +
       ' -DSENSCORD_API_PYTHON=ON' +
       ' -DSENSCORD_SERVER_WEBSOCKET=ON' +
+      ' -DSENSCORD_AITRIOS_SPECIFIC_ENABLED=ON' +
       ' -DWAMR_ROOT_DIR=' + wamr_link_target +
       ' -DWAMR_IWASM_LIBRARY=' + wamr_link_target_build + '/libiwasm.so' +
       ' && ' +
