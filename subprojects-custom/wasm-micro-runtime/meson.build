@@ -1,3 +1,9 @@
+if meson.is_cross_build()
+    sysroot_path = meson.get_cross_property('sys_root', '/')
+else 
+    sysroot_path = ''
+endif
+
 wasm_wrap = subproject('wasm-micro-runtime', required: false)
 wamr_src = meson.source_root() + '/subprojects/wasm-micro-runtime'
 wamr_prod_src = join_paths(wamr_src, 'product-mini', 'platforms', 'linux')
@@ -9,12 +15,17 @@ is_t4r_build = get_option('senscord_core_t4r_build') or get_option('senscord_com
 # External delegate options - only enabled for T4R
 external_delegate_options = is_t4r_build ? \
   ' -DWAMR_BUILD_WASI_NN_ENABLE_EXTERNAL_DELEGATE=1' + \
-  ' -DWAMR_BUILD_WASI_NN_EXTERNAL_DELEGATE_PATH="/usr/lib/libvx_delegate.so"' \
+  ' -DWAMR_BUILD_WASI_NN_EXTERNAL_DELEGATE_PATH=' + sysroot_path + '"/usr/lib/libvx_delegate.so"' + \
+  ' -DCMAKE_SYSROOT=' + sysroot_path  + '/' + \
+  ' -Donnxruntime_INCLUDE_DIR=' + sysroot_path + '/usr/include/onnxruntime/core/session' + \
+  ' -Donnxruntime_LIBRARY=' + sysroot_path + '/usr/lib/libonnxruntime.so' + \
+  ' -DWASI_NN_EXT_DELEGATE_PATH=' + sysroot_path + '"/usr/lib/libvx_delegate.so"' \
   : ''
 
 message('external_delegate_options: @0@'.format(external_delegate_options))
 message('================================')
 
+# if cross compiling and onnxruntime is available in sysroot, link against it.
 build_wamr = custom_target(
   'build_wamr',
   output: ['libiwasm.so','iwasm', '**.so.*'],

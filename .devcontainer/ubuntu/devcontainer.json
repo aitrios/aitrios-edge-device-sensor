@@ -3,8 +3,16 @@
     "build": {
         "dockerfile": "Dockerfile"
     },
+    "workspaceFolder": "/workspace",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+    "containerEnv": {
+        "LANG": "C.UTF-8",
+        "LC_ALL": "C.UTF-8"
+    },
+    "postCreateCommand": "echo 'Dev Container setup completed!'",
     "remoteUser": "vscode",
     "runArgs": [
         "--network=host"
-    ]
+    ],
+    "init": true
 }

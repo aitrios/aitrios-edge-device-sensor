@@ -8,4 +8,5 @@ option('senscord_core_t4r_build', type: 'boolean', value: false)
 option('senscord_component_t4r_build', type: 'boolean', value: false)
 option('link_jpeg_lib', type: 'boolean', value: false)
 option('link_exif_lib', type: 'boolean', value: false)
+option('build_variant_imx500_es', type: 'boolean', value: false)
 
