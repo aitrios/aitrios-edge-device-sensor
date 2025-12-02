@@ -89,6 +89,9 @@ jobs:
 
     runs-on: ubuntu-24.04
 
+    permissions:
+      contents: write
+
     steps:
       - name: Download Rpi build artifact
         uses: actions/download-artifact@v4
