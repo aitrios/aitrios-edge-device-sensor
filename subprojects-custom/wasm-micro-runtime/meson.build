@@ -15,11 +15,10 @@ is_t4r_build = get_option('senscord_core_t4r_build') or get_option('senscord_com
 # External delegate options - only enabled for T4R
 external_delegate_options = is_t4r_build ? \
   ' -DWAMR_BUILD_WASI_NN_ENABLE_EXTERNAL_DELEGATE=1' + \
-  ' -DWAMR_BUILD_WASI_NN_EXTERNAL_DELEGATE_PATH=' + sysroot_path + '"/usr/lib/libvx_delegate.so"' + \
+  ' -DWAMR_BUILD_WASI_NN_EXTERNAL_DELEGATE_PATH="/usr/lib/libvx_delegate.so"' + \
   ' -DCMAKE_SYSROOT=' + sysroot_path  + '/' + \
   ' -Donnxruntime_INCLUDE_DIR=' + sysroot_path + '/usr/include/onnxruntime/core/session' + \
-  ' -Donnxruntime_LIBRARY=' + sysroot_path + '/usr/lib/libonnxruntime.so' + \
-  ' -DWASI_NN_EXT_DELEGATE_PATH=' + sysroot_path + '"/usr/lib/libvx_delegate.so"' \
+  ' -Donnxruntime_LIBRARY=' + sysroot_path + '/usr/lib/libonnxruntime.so' \
   : ''
 
 message('external_delegate_options: @0@'.format(external_delegate_options))
