@@ -1,3 +1,4 @@
+# DevContainer for Unit Tests
 FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
 
 # Explicitly set shell for consistent && behavior
@@ -41,6 +42,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # Testing frameworks
     libgtest-dev \
     libgmock-dev \
+    # Perl modules for LCOV 2.1
+    libcapture-tiny-perl \
+    libdatetime-perl \
+    libtimedate-perl \
+    libgd-perl \
+    libjson-xs-perl \
     # Set GCC alternatives to use GCC-13 (compatible with GCOV 13.3.0)
     && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100 \
     && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 100 \
@@ -52,14 +59,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Install specific version of lcov (1.15-1) from source if not available in package manager
-RUN LCOV_VERSION="1.15" \
-    && wget https://github.com/linux-test-project/lcov/releases/download/v${LCOV_VERSION}/lcov-${LCOV_VERSION}.tar.gz \
-    && tar -xzf lcov-${LCOV_VERSION}.tar.gz \
-    && cd lcov-${LCOV_VERSION} \
-    && make install \
+# Install LCOV 2.1 from source (for exception branch exclusion support)
+RUN wget -q https://github.com/linux-test-project/lcov/releases/download/v2.1/lcov-2.1.tar.gz \
+    && tar -xzf lcov-2.1.tar.gz \
+    && cd lcov-2.1 \
+    && make install PREFIX=/usr/local \
     && cd .. \
-    && rm -rf lcov-${LCOV_VERSION} lcov-${LCOV_VERSION}.tar.gz
+    && rm -rf lcov-2.1 lcov-2.1.tar.gz
 
 # for documentation
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -83,7 +89,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION} | bash - \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# test - google test installation
+# Install Google Test from source
 RUN git clone https://github.com/google/googletest.git -b v1.17.0 && \
     cd googletest && \
     mkdir build && \
@@ -127,21 +133,24 @@ USER vscode
 RUN echo "# Auto-navigate to test directory" >> ~/.bashrc \
     && echo "if [ -d '/workspace/test/scripts' ]; then cd /workspace/test/scripts; fi" >> ~/.bashrc \
     && echo "" >> ~/.bashrc \
+    && echo "# Use LCOV 2.1 from /usr/local/bin" >> ~/.bashrc \
+    && echo 'export PATH="/usr/local/bin:$PATH"' >> ~/.bashrc \
+    && echo "" >> ~/.bashrc \
     && echo "# Unit Test Environment Welcome Message" >> ~/.bashrc \
-    && echo "echo '📋 SensCord Development Environment Ready!'" >> ~/.bashrc \
-    && echo "echo '📂 Current directory: \$(pwd)'" >> ~/.bashrc \
-    && echo "echo '🚀 Run ./run_unit_test.sh to execute all tests (from test/scripts)'" >> ~/.bashrc \
-    && echo "echo '🧹 Run ./clean_test_artifacts.sh to clean up all test artifacts'" >> ~/.bashrc \
+    && echo "echo 'SensCord Development Environment Ready!'" >> ~/.bashrc \
+    && echo "echo 'Current directory: \$(pwd)'" >> ~/.bashrc \
+    && echo "echo 'Run ./run_unit_test.sh to execute all tests (from test/scripts)'" >> ~/.bashrc \
+    && echo "echo 'Run ./clean_test_artifacts.sh to clean up all test artifacts'" >> ~/.bashrc \
     && echo "echo ''" >> ~/.bashrc \
     && echo "" >> ~/.bashrc \
     && echo "# Convenient aliases for unit testing" >> ~/.bashrc \
     && echo "alias test-run='./run_unit_test.sh'" >> ~/.bashrc \
     && echo "alias test-clean='./clean_test_artifacts.sh'" >> ~/.bashrc \
     && echo "alias test-build='./exec_unit_test.sh build sample'" >> ~/.bashrc \
-    && echo "alias devuser='echo \"Using vscode user (UID 1000) for compatibility\"'" >> ~/.bashrc \
     && echo "alias ll='ls -alF'" >> ~/.bashrc \
     && echo "alias la='ls -A'" >> ~/.bashrc \
-    && echo "alias l='ls -CF'" >> ~/.bashrc
+    && echo "alias l='ls -CF'" >> ~/.bashrc \
+    && echo "alias devuser='echo \"Using vscode user (UID 1000) for compatibility\"'" >> ~/.bashrc
 
 # Ensure vscode user has sudo privileges
 USER root
@@ -154,7 +163,7 @@ RUN echo "=== Verifying installations ===" \
     && gcc --version | head -1 \
     && gcov --version | head -1 \
     && echo "Coverage tools:" \
-    && echo "LCOV: $(lcov --version | head -n 1)" \
+    && echo "LCOV: $(/usr/local/bin/lcov --version | head -n 1)" \
     && echo "GCC/GCOV compatibility check:" \
     && GCC_VERSION=$(gcc -dumpversion) \
     && GCOV_VERSION=$(gcov --version | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1) \
