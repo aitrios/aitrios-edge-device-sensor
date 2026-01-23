@@ -1,5 +1,5 @@
 [wrap-git]
 directory = senscord-rpicam-imx500
 url = https://github.com/SonySemiconductorSolutions/senscord-rpicam-imx500.git
-revision = v0.1.23
+revision = v0.1.24
 patch_directory = senscord-rpicam-imx500
