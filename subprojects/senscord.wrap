@@ -1,5 +1,5 @@
 [wrap-git]
 directory = senscord
 url = https://github.com/SonySemiconductorSolutions/senscord.git
-revision = 1.12.2
+revision = 1.12.3
 patch_directory = senscord
